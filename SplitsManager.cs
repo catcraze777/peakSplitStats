@@ -309,8 +309,8 @@ public class SplitsManager : MonoBehaviour
     private void Update()
     {
         // Update timer positions if they're being animated right now.
-        if (AnimationManager.AreTimersCurrentlyAnimated()) UpdateTimerPositions();
-        if (SettingsManager.segmentTimersEnabled && SettingsManager.showPaceNearGoals) ShowPaceNearGoals();
+        UpdateTimerPositions();
+        if (SettingsManager.timersEnabled && SettingsManager.segmentTimersEnabled && SettingsManager.showPaceNearGoals) ShowPaceNearGoals();
     }
 
     /// <summary>
