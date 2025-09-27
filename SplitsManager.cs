@@ -250,7 +250,7 @@ public class SplitsManager : MonoBehaviour
         }
 
         // Create a timer for each segment.
-        if (SettingsManager.segmentTimersEnabled)
+        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled)
         {
             splitTimers = new Dictionary<Segment, TimerComponent>();
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
