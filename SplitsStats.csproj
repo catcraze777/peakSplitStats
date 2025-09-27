@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>SplitsStats</AssemblyName>
+    <Product>Splits Stats</Product>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+      https://nuget.samboy.dev/v3/index.json
+    </RestoreAdditionalProjectSources>
+    <RootNamespace>SplitsStats</RootNamespace>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.1" />
+    <PackageReference Include="UnityEngine.Modules" Version="6000.0.36" IncludeAssets="compile" />
+    <Reference Include="PeakLib">
+      <HintPath>libs\peak.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonNetworkingLib">
+      <HintPath>libs\PhotonUnityNetworking.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityTextMeshProLib">
+      <HintPath>libs\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngineUILib">
+      <HintPath>libs\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="NewtonsoftJsonLib">
+      <HintPath>libs\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PhotonRealtimeLib">
+      <HintPath>libs\PhotonRealtime.dll</HintPath>
+    </Reference>
+    <Reference Include="TerrainRandomiserLib">
+      <HintPath>libs\TerrainRandomiser.dll</HintPath>
+    </Reference>
+    <Reference Include="ZorroCoreRuntimeLib">
+      <HintPath>libs\Zorro.Core.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="ZorroUIRuntimeLib">
+      <HintPath>libs\Zorro.UI.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="ZorroSettingsRuntimeLib">
+      <HintPath>libs\Zorro.Settings.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.LocalizationLib">
+      <HintPath>libs\Unity.Localization.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityMathematicsLib">
+      <HintPath>libs\Unity.Mathematics.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

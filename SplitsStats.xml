@@ -1,0 +1,568 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SplitsStats</name>
+    </assembly>
+    <members>
+        <member name="M:SplitsStats.AnimationManager.AreTimersCurrentlyAnimated">
+            <summary>
+            Returns true if any timer is currently being animated.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.AnimationManager.CubicInterpolation(System.Single,System.Single,System.Single,System.Single)">
+            <summary>
+            Perform a cubic interpolation between two values given a value of t.
+            Interpolation is guaranteed to be C1 continuous for any input but this is also Cinf continuous if centralVelocity = 1.5f.
+            Note: It's expected that t in [0.0, 1.0] but this isn't enforced.
+            </summary>
+            <param name="a"> The value at t=0f </param>
+            <param name="b"> The value at t=1f </param>
+            <param name="t"> The blending factor of interpolation </param>
+            <param name="centralVelocity"> The velocity/derivative of the cubic curve at t=0.5f assuming (b - a) = 1f
+            Note: centralVelocity in [1.5, 3.0] should be true.
+            If it isn't, the direction of curvature will change more than once within t = (0,1) and 
+            create an unnatural interpolation curve.</param>
+        </member>
+        <member name="F:SplitsStats.BaseUIComponent.uiPosition">
+            <summary>
+            The position to put this component in the SplitsStats UI, either UIComponentPosition.TopLeft or UIComponentPosition.TopRight.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.BaseUIComponent.rectTransform">
+            <summary>
+            The RectTransform of this component's gameObject.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.BaseUIComponent.INITIAL_HEIGHT">
+            <summary>
+            A default height for the internal scale of UI elements. The component's gameObject is scaled to change the vertical height of the element.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.CreateUIComponent``1(System.String,UnityEngine.Transform)">
+            <summary>
+            A simpler name for <c>CreateBaseUIComponent</c>
+            </summary>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.CreateBaseUIComponent``1(System.String,UnityEngine.Transform)">
+            <summary>
+            Create and return a BaseUIComponent attached to a new gameObject parented to a provided transform. Use a template to allow subclasses to reuse object construction in the superclass.
+            </summary>
+            <typeparam name="T">BaseUIComponent or one of its defined subclasses.</typeparam>
+            <param name="name">The name to use for this component's gameObject.</param>
+            <param name="parent">The parent transform to set as this component's gameObject's parent.</param>
+            <returns>A BaseUIComponent attached to a newly created gameObject. Matches type of template since BaseUIComponent is abstract.</returns>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.Start">
+            <summary>
+            The Monobehavior Start Script: This is responsible for creating and modifying child gameObjects needed for the UI component, if they don't already exist.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.SetHeight(System.Single)">
+            <summary>
+            Change the height of the UI object. Ensure when overriding that this always matches the pixel height of the entire element, otherwise rendered components will overlap each other.
+            </summary>
+            <param name="newSize"> The new height of the object. </param>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.GetHeight">
+            <summary>
+            Get the height of the UI object. Ensure when overriding that this always matches the pixel height of the entire element, otherwise rendered components will overlap each other.
+            </summary>
+            <returns> The height of the object. </returns>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.GetRectTransform">
+            <summary>
+            Get the RectTransform associated with this component.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponent.SetSortingPriority(System.Int32)">
+            <summary>
+            Set the priority of ordering for all InfoComponents displayed by a SplitsManager object. Lower priorities result in being placed higher in the rendered stats.
+            </summary>
+            <param name="priority">The integer used for sorting InfoComponents.</param>
+        </member>
+        <member name="M:SplitsStats.BaseUIComponentList.Add(SplitsStats.BaseUIComponent)">
+            <summary>
+            Insert a component into this list while keeping elements sorted by priority (ascending order)
+            </summary>
+            <param name="value">The component to insert into the list.</param>
+        </member>
+        <member name="F:SplitsStats.InfoComponent.textRectTransform">
+            <summary>
+            The RectTransform of the text gameObject.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.InfoComponent.iconRectTransform">
+            <summary>
+            The RectTransform of the image icon gameObject.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.InfoComponent.iconImage">
+            <summary>
+            The UnityEngine.UI.Image component of the icon gameObject.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.InfoComponent.tmpText">
+            <summary>
+            The TMP_Text component of the text gameObject.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.InfoComponent.TextToDisplay">
+            <summary>
+            When called, returns the text to display for this component. If this function returns null, then the text isn't updated.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.InfoComponent.templateTextObject">
+            <summary>
+            A template text object using Daruma Drop One font, uses the AscentUI component as a base. DO NOT EDIT ANY PROPERTIES OF THIS GAMEOBJECT, COPY IT USING OBJECT.INSTANTIATE() FIRST
+            </summary>
+        </member>
+        <member name="P:SplitsStats.InfoComponent.templateIconObject">
+            <summary>
+            A template icon object using the custom fuzzy shader effect, uses the Extra Stamina icon as a base. DO NOT EDIT ANY PROPERTIES OF THIS GAMEOBJECT, COPY IT USING OBJECT.INSTANTIATE() FIRST
+            </summary>
+        </member>
+        <member name="M:SplitsStats.InfoComponent.CreateInfoComponent(SplitsStats.InfoComponentTemplate,UnityEngine.Transform)">
+            <summary>
+            Create and return an InfoComponent attached to a new gameObject parented to a provided transform.
+            </summary>
+            <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
+            <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent.</param>
+            <returns>A InfoComponent attached to a newly created gameObject.</returns>
+        </member>
+        <member name="F:SplitsStats.InfoComponent.template">
+            <summary>
+            The template used/to be used for creating the internal gameObjects used for the UI. Modifying it has no affect once Start() has executed.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.InfoComponent.CreateInfoComponent``1(SplitsStats.InfoComponentTemplate,UnityEngine.Transform)">
+            <summary>
+            Create and return a InfoComponent attached to a new gameObject parented to a provided transform. Use a template to allow subclasses to reuse object construction in the superclass.
+            </summary>
+            <typeparam name="T">InfoComponent or one of its defined subclasses.</typeparam>
+            <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
+            <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent.</param>
+            <returns>A InfoComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
+        </member>
+        <member name="M:SplitsStats.InfoComponent.Start">
+            <summary>
+            The Monobehavior Start Script: This is responsible for creating and modifying child gameObjects needed for the UI component, if they don't already exist.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.InfoComponent.SetColor(UnityEngine.Color)">
+            <summary>
+            Change the color of the text.
+            </summary>
+            <param name="newColor"> The new color of the text. </param>
+            <returns> A boolean indicating if the change was successful. </returns>
+        </member>
+        <member name="M:SplitsStats.InfoComponent.Update">
+            <summary>
+            Update the text of the info stat. Text shows the time and the info stat's label if present.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsStatsPlugin.AddCustomStat(SplitsStats.InfoComponentTemplate)">
+            <summary>
+            Add a custom InfoComponent to the SplitsStats UI using an InfoComponentTemplate.
+            </summary>
+            <param name="addonTemplate">The template containing info for the created InfoComponent</param>
+        </member>
+        <member name="M:SplitsStats.SplitsStatsPlugin.AddCustomComponent(SplitsStats.BaseUIComponent)">
+            <summary>
+            Add a custom BaseUIComponent to the SplitsStats UI. Should be a RectTransform gameObject with a BaseUIComponent subclass component and it's recommended to ensure all resources used by the component are all children of the component's transform.
+            </summary>
+            <param name="newComponent">The custom component to add to the UI.</param>
+        </member>
+        <member name="M:SplitsStats.SplitsStatsPlugin.LoadSprite(System.String)">
+            <summary>
+            Load a sprite from a filepath relative to the calling assembly location.
+            </summary>
+            <param name="relativeImgPath"> The file location of the image relative to the calling assembly location. </param>
+        </member>
+        <member name="M:SplitsStats.SplitsStatsPlugin.CategorizeByCurrRunConfig(SplitsStats.RunTime)">
+            <summary>
+            Return if the input run is in the same category as the currently active run based on the config settings.
+            </summary>
+            <param name="otherRunTime">The time to compare to the active run's category</param>
+            <returns>Returns true if the <c>otherRunTime</c> is in the same category as the current run. If no run is currently active, this always returns true.</returns>
+        </member>
+        <member name="P:SplitsStats.RunSaveManager.currentRun">
+            <summary>
+            The run info of the current run the player is actively on.
+            The object reference will get assigned and unasigned by RunSaveManager.
+            Edit the object properties to change what will get saved.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.RunSaveManager.CategorizationFunc">
+            <summary>
+            The function used by <c>GetRunRecords()</c> by default if none are provided.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.RunSaveManager.IncludeAllRuns">
+            <summary>
+            A default function for <c>GetRunRecords()</c> to explicitly use all records regardless of what <c>this.CategorizationFunc</c> has stored.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.InitRunSaveManager">
+            <summary> Try to read the save or load the default when creating the RunSaveManager object. </summary>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.StartNewRun">
+            <summary> Start a new run and assign it to this.currentRun. Edit this.currentRun and that data will be saved. </summary>
+            <returns> A copy of the reference of the object stored in this.currentRun </returns>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.SaveRun">
+            <summary> Save the information currently stored in this.currentRun </summary>
+            <returns> A boolean indicating if the save was successful. </returns>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.FinishRun">
+            <summary> Save the information currently stored in this.currentRun and remove the object reference to start a new run later. </summary>
+            <returns> A boolean indicating if the save was successful and this.currentRun is reset to null. </returns>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.IsRunActive">
+            <summary> Returns true if a run is currently active and an object exists in this.currentRun. </summary>
+        </member>
+        <member name="M:SplitsStats.RunSaveManager.GetRunRecords(System.Func{SplitsStats.RunTime,System.Boolean})">
+            <summary>
+            Fetch the records from all currently loaded runs to use for splits and other purposes.
+            </summary>
+            <param name="InputCategorizationFunc">
+            A function used to allow for loading records based on categories.
+            Takes a RunTime as input and returns a bool indicating if the run should be considered for records or not.
+            By default (param set to null), <c>this.CategorizationFunc</c> is used. If <c>this.CategorizationFunc</c> is null (by default it is), then all runs are considered.
+            To explicitly use all runs, use <c>RunSaveManager.IncludeAllRuns</c> for the parameter.
+            </param>
+        </member>
+        <member name="M:SplitsStats.RunTime.#ctor">
+            <summary> Default constructor. </summary>
+        </member>
+        <member name="M:SplitsStats.RunTime.#ctor(SplitsStats.RunTime)">
+            <summary> Copy constructor. </summary>
+        </member>
+        <member name="P:SplitsStats.RunTime.Item(Segment)">
+            <summary> Index the stored segment times with the corresponding Segment Enum. </summary>
+        </member>
+        <member name="M:SplitsStats.RunTime.Equals(System.Object)">
+            <summary> Run equality: true iff all times and game properties are equal. Run metadata, such as runDate, is not considered.</summary>
+        </member>
+        <member name="M:SplitsStats.RunTime.HasTimes">
+            <summary> Returns true if any time info is stored in this object (has info that should be saved). </summary> 
+        </member>
+        <member name="M:SplitsStats.SplitsManager.SetRunTargets">
+            <summary>
+            Use RunSaveManager to set the target times for the timers.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.setupCheck">
+            <summary>
+            Method to ensure this object is ready for functions that assume it is.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown if SetupManager() hasn't been called yet for this object.
+            </exception>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.CreateSplitsManager(GUIManager,System.Collections.Generic.List{SplitsStats.InfoComponentTemplate})">
+            <summary>
+            Method that creates and initializes the SplitsManager GameObject using a GUIManager to copy components from.
+            </summary>
+            <param name="guiManager"> The GUIManager to copy components from and act as a parent. </param>
+            <param name="componentList"> A list of InfoComponentTemplate objects containing the data needed to create an info panel. </param>
+            <returns>The SplitsManager component attached to the created GameObject.</returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.SetupManager(GUIManager,System.Collections.Generic.List{SplitsStats.InfoComponentTemplate})">
+            <summary>
+            Method that initializes the SplitsManager using a GUIManager to copy components from.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.UpdateTimerPositions">
+            <summary>
+            Call to update the position of the timers based on their sizes. Best to call after changing font sizes.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.ShowPaceNearGoals">
+            <summary>
+            Call to update the visibility of the split pace/intervals based on how close the player is to finishing the run/segment.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.GetLocalCharacterPosition">
+            <summary>
+            Get the position of the local character's position. Also accounts for if the player is dead and a ghost.
+            </summary>
+            <returns>Position of the local character. Returns Vector3.zero if the local character couldn't be found.</returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.GetNextObjectivePosition">
+            <summary>
+            Get the position of the player's next objective (campfires then the peak).
+            </summary>
+            <returns>Position of the next objective. Returns Vector3.zero if the objective's object couldn't be found.</returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.GetHeightText">
+            <summary>
+            Returns text representing the height/altitude of the local character, or null if the local character couldn't be found.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.GetDistanceToObjectiveString">
+            <summary>
+            Returns text representing the local character's distance away from a campfire/peak, or null if the local character or objective object couldn't be found.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.StartTimer(Segment)">
+            <summary>
+            Start the timer of a specific segment at the current time.
+            </summary>
+            <param name="targetSegment"> The target segment to start a timer for. </param>
+            <returns> A boolean indicating if the timer was successfully started. 
+            If the timer was started previously and hasn't been stopped yet then this will return false and have no affect on the timer. </returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.StartTimerAtTime(Segment,System.Single)">
+            <summary>
+            Start the timer of a specific segment and set it's start time to a specified time.
+            </summary>
+            <param name="targetSegment"> The target segment to start a timer for. </param>
+            <param name="startTime"> The start time to save into the timer. </param>
+            <returns> A boolean indicating if the timer was successfully modified. 
+            If the timer was started previously and hasn't been stopped yet then this will return false and have no affect on the timer and it's data. </returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.EndTimer(Segment)">
+            <summary>
+            End the timer of a specific segment at the current time.
+            </summary>
+            <param name="targetSegment"> The target segment to end a timer for. </param>
+            <returns> A boolean indicating if the timer was successfully stopped. 
+            If the timer was stopped previously and hasn't been started yet then this will return false and have no affect on the timer. </returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.EndTimerAtTime(Segment,System.Single)">
+            <summary>
+            End the timer of a specific segment and set it's end time to a specified time.
+            </summary>
+            <param name="targetSegment"> The target segment to end a timer for. </param>
+            <param name="endTime"> The end time to save into the timer. </param>
+            <returns> A boolean indicating if the timer was successfully modified. 
+            If the timer was stopped previously and hasn't been started yet then this will return false and have no affect on the timer and it's data. </returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.SetTimerFontSize(Segment,System.Single)">
+            <summary>
+            Set the font size for a specific segment's timer.
+            </summary>
+            <param name="targetSegment"> The target segment of the timer to change font size. </param>
+            <param name="newFontSize"> The new font size to set. </param>
+            <returns> A boolean indicating if the timer was successfully modified. </returns>
+        </member>
+        <member name="M:SplitsStats.SplitsManager.GetTimerFontSize(Segment)">
+            <summary>
+            Get the font size for a specific segment's timer.
+            </summary>
+            <param name="targetSegment"> The target segment of the timer to get font size from. </param>
+            <returns> The font size of the desired segment or -1.0f if unable to find/read the font size. </returns>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.startTime">
+            <summary>
+            Read-Only: A float representing the time this timer was started at. As is, this float represents how long in seconds since starting the game.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.endTime">
+            <summary>
+            Read-Only: A float representing the time this timer was started at. As is, this float represents how long, in seconds, since starting the game.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.currTime">
+            <summary>
+            Read-Only: A float representing the current time displayed. Actively updates if the timer is running, is constant if the timer is stopped. As is, this float represents how long, in seconds, the timer has ran for.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.totalTime">
+            <summary>
+            Read-Only: A float representing the total time a timer tracked from start to end. Returns -1.0f if the timer is currently running, unlike currtime. As is, this float represents how long, in seconds, the timer has ran for.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.TimerComponent.recordTime">
+            <summary>
+            A float stored representing the gold split target time. As is, this float represents the length, in seconds, of the record time. Set to a negative number to disable using a record time for gold splits.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.timerOn">
+            <summary>
+            Read-Only: A boolean indicating if the timer is currently running.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.TimerComponent.showHour">
+            <summary>
+            A boolean indicating if the timer should always show the hour digit even if it would display as zero.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.TimerComponent.precisionDigits">
+            <summary>
+            The number of decimal digits to display in the time, set to 0 or less to display only whole seconds.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.isRealTime">
+            <summary>
+            A boolean that determines if this timer uses real time or in-game time. Can be set externally to adjust only if the timer isn't running.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Raised when setting this parameter while the timer is currently running.</exception>
+        </member>
+        <member name="F:SplitsStats.TimerComponent.runStartTime">
+            <summary>
+            A static time that stores a start time to reference to determine how long an entire run has lasted without needing to reference other timers. As is, this float represents how long, in seconds, since starting the game.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.currRunTime">
+            <summary>
+            Read-Only: A float representing the time between when a run is started and this timer's current time. Actively updates if the timer is running, is constant if the timer is stopped. As is, this float represents how long, in seconds, the timer has ran for.
+            </summary>
+        </member>
+        <member name="F:SplitsStats.TimerComponent.targetRunTime">
+            <summary>
+            A float stored representing the current run's target split time. As is, this float represents the length, in seconds, of the record time. Set to a negative number to disable using a run time and displaying the interval pace.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.currPace">
+            <summary>
+            Read-Only: A float stored representing the current run's pace. As is, this float represents the difference between currRunTime and targetRunTime (negative is faster, positive is slower). If targetRunTime isn't set, this returns null.
+            </summary>
+        </member>
+        <member name="P:SplitsStats.TimerComponent.neverStarted">
+            <summary>
+            Read-Only: A boolean indicating if the timer has ever been started since it's construction. Read-only.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.CreateTimerComponent(SplitsStats.InfoComponentTemplate,UnityEngine.Transform)">
+            <summary>
+            Create and return a TimerComponent attached to a new gameObject parented to a provided transform.
+            </summary>
+            <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
+            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+            <returns>A TimerComponent attached to a newly created gameObject.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.CreateTimerComponent``1(SplitsStats.InfoComponentTemplate,UnityEngine.Transform)">
+            <summary>
+            Create and return a TimerComponent attached to a new gameObject parented to a provided transform. Use a template to allow subclasses to reuse object construction in the superclass.
+            </summary>
+            <typeparam name="T">TimerComponent or one of its defined subclasses.</typeparam>
+            <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
+            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+            <returns>A TimerComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.Start">
+            <summary>
+            The Monobehavior Start Script: This is responsible for creating and modifying child gameObjects needed for the UI component, if they don't already exist.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.GetTimeString(System.Single)">
+            <summary>
+            Convert a time (in seconds) to a string based on this object's showHour and precisionDigits properties.
+            You can set these properties manually prior to calling this.
+            </summary>
+            <param name="totalSeconds"> The time in seconds to convert to a string. </param>
+            <returns> The time represented as a string. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.GetTimeString(System.Single,System.Boolean,System.Boolean,System.UInt32,System.Boolean)">
+            <summary>
+            Convert a time (in seconds) to a string.
+            </summary>
+            <param name="totalSeconds"> The time in seconds to convert to a string. </param>
+            <param name="showHour"> Should the hours be shown even if there are zero hours? </param>
+            <param name="showMinute"> Should the minutes be shown even if minutes and hours are zero? </param>
+            <param name="precisionDigits"> Should hundreths of a second be shown? </param>
+            <param name="showPositiveSign"> If true, a "+" is appended to the front of the time if it is positive. A "-" will always be present for negative times. </param>
+            <returns> The time represented as a string. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.SetInitialColor(UnityEngine.Color)">
+            <summary>
+            Change the initial color of the text prior to being started for the first time.
+            </summary>
+            <param name="newColor"> The new color of the text. </param>
+            <returns> A boolean indicating if the change had an immediate visible impact. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.SetActiveColor(UnityEngine.Color)">
+            <summary>
+            Change the color of the text that is used if the timer is actively counting.
+            </summary>
+            <param name="newColor"> The new color of the text. </param>
+            <returns> A boolean indicating if the change had an immediate visible impact. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.SetInactiveColor(UnityEngine.Color)">
+            <summary>
+            Change the color of the text that is used if the timer has been stopped after being active previously.
+            </summary>
+            <param name="newColor"> The new color of the text. </param>
+            <returns> A boolean indicating if the change had an immediate visible impact. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.SetCurrColor(UnityEngine.Color)">
+            <summary>
+            Change the color of the text.
+            </summary>
+            <param name="newColor"> The new color of the text. </param>
+            <returns> A boolean indicating if the change was successful. </returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.SetPaceTextActive(System.Boolean)">
+            <summary>
+            Set the pace text active or not.
+            </summary>
+            <param name="isActive">The new active state for the pace text.</param>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.GetPaceTextActive">
+            <summary>
+            Return if the pace text is active or not.
+            </summary>
+            <returns>The current active state for the pace text.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.UpdateText(System.Single)">
+            <summary>
+            Update the text of the timer. Text shows the time and the timer's label if present.
+            </summary>
+            <param name="time"> The time (in seconds) to show in the text. </param>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.GetCurrentTime">
+            <summary>
+            Returns a time (in seconds) depending on what isRealTime is set to.
+            If true, uses system time. If false, uses game time.
+            </summary>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.StartRunTimer">
+            <summary>
+            Start this timer at and set TimerComponent.runStartTime to the current time.
+            Equivalent to <c>StartRunAtTime( GetCurrentTime() );</c>
+            </summary>
+            <returns> A boolean indicating if the timer was successfully started.
+            If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.StartTimer">
+            <summary>
+            Start this timer at the current time.
+            Equivalent to <c>StartAtTime( GetCurrentTime() );</c>
+            </summary>
+            <returns> A boolean indicating if the timer was successfully started.
+            If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.StartRunAtTime(System.Single)">
+            <summary>
+            Start this timer at and set TimerComponent.runStartTime to a specified time.
+            </summary>
+            <returns> A boolean indicating if the timer was successfully started.
+            If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.StartAtTime(System.Single)">
+            <summary>
+            Start this timer and set it's start time to a specified time.
+            </summary>
+            <param name="startingTime"> The time to store as the starting time. </param>
+            <returns> A boolean indicating if the timer was successfully modified.
+            If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.EndTimer">
+            <summary>
+            End this timer at the current time.
+            Equivalent to <c>EndAtTime( GetCurrentTime() );</c>
+            </summary>
+            <returns> A boolean indicating if the timer was successfully stopped.
+            If the timer is already stopped then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+        <member name="M:SplitsStats.TimerComponent.EndAtTime(System.Single)">
+            <summary>
+            End this timer and set it's end time to a specified time.
+            </summary>
+            <param name="endingTime"> The time to store as the ending time. </param>
+            <returns> A boolean indicating if the timer was successfully stopped.
+            If the timer is already stopped then this returns false and has no affect on the timer and it's data.</returns>
+        </member>
+    </members>
+</doc>
