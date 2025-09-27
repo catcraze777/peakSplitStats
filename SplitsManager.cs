@@ -199,10 +199,13 @@ public class SplitsManager : MonoBehaviour
         }
 
         // Create the main timer.
-        InfoComponentTemplate mainTimerTemplate = new("Main Timer", icon: SplitsStatsPlugin.LoadSprite(stopwatchImgPath), initialFontSize: HEADER_FONT_SIZE, position: UIComponentPosition.TopLeft);
-        mainTimer = CreateTimerComponent(mainTimerTemplate, false);
-        mainTimer.SetInactiveColor(new Color(0.7f, 0.7f, 0.7f));
-        mainTimer.SetPaceTextActive(false);
+        if (SettingsManager.timersEnabled)
+        {
+            InfoComponentTemplate mainTimerTemplate = new("Main Timer", icon: SplitsStatsPlugin.LoadSprite(stopwatchImgPath), initialFontSize: HEADER_FONT_SIZE, position: UIComponentPosition.TopLeft);
+            mainTimer = CreateTimerComponent(mainTimerTemplate, false);
+            mainTimer.SetInactiveColor(new Color(0.7f, 0.7f, 0.7f));
+            mainTimer.SetPaceTextActive(false);
+        }
 
         InfoComponent CreateInfoComponent(InfoComponentTemplate template, bool addToSide = true)
         {
@@ -331,7 +334,7 @@ public class SplitsManager : MonoBehaviour
             SplitsStatsPlugin.Logger.LogInfo($"y offset: {currentYPos}");
         }
 
-        void AppendInfo(RectTransform currObject, InfoComponent currInfo)
+        void AppendInfo(RectTransform currObject, BaseUIComponent currInfo)
         {
             if (currObject == null || currInfo == null) return;
             currFontSize = currInfo.GetHeight();
@@ -340,7 +343,7 @@ public class SplitsManager : MonoBehaviour
 
         void AppendFromList(BaseUIComponentList list)
         {
-            foreach (InfoComponent currComponent in list)
+            foreach (BaseUIComponent currComponent in list)
             {
                 RectTransform currTransform = currComponent.rectTransform;
                 AppendInfo(currTransform, currComponent);
@@ -354,7 +357,6 @@ public class SplitsManager : MonoBehaviour
             AppendInfo(currTransform, mainTimer);
             currentYPos += HEADER_SPACING - LINE_SPACING;
         }
-        else SplitsStatsPlugin.Logger.LogError($"Couldn't update main timer position!");
 
         // Move split timers.
         AppendFromList(topLeftComponents);

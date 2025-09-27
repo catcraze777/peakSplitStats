@@ -22,6 +22,9 @@ public class SettingsManager
     public static ConfigEntry<bool> segmentTimersEnabledConfig;
     public static bool segmentTimersEnabled { get { return segmentTimersEnabledConfig?.Value ?? true; } private set { if (segmentTimersEnabledConfig != null) segmentTimersEnabledConfig.Value = value; } }
 
+    public static ConfigEntry<bool> timersEnabledConfig;
+    public static bool timersEnabled { get { return timersEnabledConfig?.Value ?? true; } private set { if (timersEnabledConfig != null) timersEnabledConfig.Value = value; } }
+
     public static ConfigEntry<float> uiScaleSizeConfig;
     public static float uiScaleSize { get { return uiScaleSizeConfig?.Value ?? 1.0f; } private set { if (uiScaleSizeConfig != null) uiScaleSizeConfig.Value = value; } }
 
@@ -111,9 +114,10 @@ public class SettingsManager
     public static void LoadConfigBindings()
     {
         if (config == null) return;
-
-        isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
+        
+        timersEnabledConfig = config.Bind("1. General", "Enable Timer", segmentTimersEnabled, "Show the main speedrunning timer.");
         segmentTimersEnabledConfig = config.Bind("1. General", "Show Segment Timers", segmentTimersEnabled, "Show the times for individual biome segments.");
+        isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
         showCurrentHeightConfig = config.Bind("1. General", "Show Current Height", showCurrentHeight, "Show the player's current height/altitude.");
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
