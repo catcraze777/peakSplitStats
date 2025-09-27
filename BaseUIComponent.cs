@@ -27,7 +27,7 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     /// <summary>
     /// A simpler name for <c>CreateBaseUIComponent</c>
     /// </summary>
-    public static T CreateUIComponent<T>(string name, Transform parent) where T : BaseUIComponent
+    public static T CreateUIComponent<T>(string name, Transform parent = null) where T : BaseUIComponent
     {
         return CreateBaseUIComponent<T>(name, parent);
     }
@@ -37,13 +37,13 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     /// </summary>
     /// <typeparam name="T">BaseUIComponent or one of its defined subclasses.</typeparam>
     /// <param name="name">The name to use for this component's gameObject.</param>
-    /// <param name="parent">The parent transform to set as this component's gameObject's parent.</param>
+    /// <param name="parent">The parent transform to set as this component's gameObject's parent. Setting to null creates the object as a scene root object.</param>
     /// <returns>A BaseUIComponent attached to a newly created gameObject. Matches type of template since BaseUIComponent is abstract.</returns>
-    public static T CreateBaseUIComponent<T>(string name, Transform parent) where T : BaseUIComponent
+    public static T CreateBaseUIComponent<T>(string name, Transform parent = null) where T : BaseUIComponent
     {
         GameObject baseObject = new GameObject(name, typeof(RectTransform), typeof(T));
         T currComponent = baseObject.GetComponent<T>();
-        baseObject.transform.parent = parent;
+        if (parent != null) baseObject.transform.parent = parent;
 
         return currComponent;
     }

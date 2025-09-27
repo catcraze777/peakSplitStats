@@ -137,7 +137,7 @@ public class InfoComponent : BaseUIComponent
     /// <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
     /// <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent.</param>
     /// <returns>A InfoComponent attached to a newly created gameObject.</returns>
-    public static InfoComponent CreateInfoComponent(InfoComponentTemplate template, Transform parent)
+    public static InfoComponent CreateInfoComponent(InfoComponentTemplate template, Transform parent = null)
     {
         return CreateInfoComponent<InfoComponent>(template, parent);
     }
@@ -152,9 +152,9 @@ public class InfoComponent : BaseUIComponent
     /// </summary>
     /// <typeparam name="T">InfoComponent or one of its defined subclasses.</typeparam>
     /// <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-    /// <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent.</param>
+    /// <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
     /// <returns>A InfoComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
-    public static T CreateInfoComponent<T>(InfoComponentTemplate template, Transform parent) where T : InfoComponent
+    public static T CreateInfoComponent<T>(InfoComponentTemplate template, Transform parent = null) where T : InfoComponent
     {
         T currComponent = CreateBaseUIComponent<T>(template.name, parent);
         currComponent.template = new InfoComponentTemplate(template);

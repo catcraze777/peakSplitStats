@@ -115,9 +115,9 @@ public class TimerComponent : InfoComponent
     /// Create and return a TimerComponent attached to a new gameObject parented to a provided transform.
     /// </summary>
     /// <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-    /// <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+    /// <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
     /// <returns>A TimerComponent attached to a newly created gameObject.</returns>
-    public static TimerComponent CreateTimerComponent(InfoComponentTemplate template, Transform parent)
+    public static TimerComponent CreateTimerComponent(InfoComponentTemplate template, Transform parent = null)
     {
         return CreateTimerComponent<TimerComponent>(template, parent);
     }
@@ -127,9 +127,9 @@ public class TimerComponent : InfoComponent
     /// </summary>
     /// <typeparam name="T">TimerComponent or one of its defined subclasses.</typeparam>
     /// <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-    /// <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+    /// <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
     /// <returns>A TimerComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
-    public static T CreateTimerComponent<T>(InfoComponentTemplate template, Transform parent) where T : TimerComponent
+    public static T CreateTimerComponent<T>(InfoComponentTemplate template, Transform parent = null) where T : TimerComponent
     {
         T currComponent = CreateInfoComponent<T>(template, parent);
 

@@ -10,6 +10,8 @@ namespace SplitsStats;
 
 public class SplitsManager : MonoBehaviour
 {
+    public static SplitsManager Instance;
+
     public RectTransform topLeftInfoObject;
     public RectTransform topRightInfoObject;
 
@@ -21,9 +23,11 @@ public class SplitsManager : MonoBehaviour
         {
             case UIComponentPosition.TopLeft:
                 topLeftComponents.Add(input);
+                input.transform.parent = topLeftInfoObject;
                 break;
             case UIComponentPosition.TopRight:
                 topRightComponents.Add(input);
+                input.transform.parent = topRightInfoObject;
                 break;
             default:
                 throw new NotSupportedException($"Alignment of value {input.uiPosition} not supported!");
@@ -186,10 +190,10 @@ public class SplitsManager : MonoBehaviour
             switch (template.position)
             {
                 case UIComponentPosition.TopLeft:
-                    newComponent = TimerComponent.CreateTimerComponent(template, topLeftInfoObject);
+                    newComponent = TimerComponent.CreateTimerComponent(template);
                     break;
                 case UIComponentPosition.TopRight:
-                    newComponent = TimerComponent.CreateTimerComponent(template, topRightInfoObject);
+                    newComponent = TimerComponent.CreateTimerComponent(template);
                     break;
                 default:
                     throw new NotSupportedException($"Alignment of value {template.position} not supported!");
@@ -205,6 +209,7 @@ public class SplitsManager : MonoBehaviour
             mainTimer = CreateTimerComponent(mainTimerTemplate, false);
             mainTimer.SetInactiveColor(new Color(0.7f, 0.7f, 0.7f));
             mainTimer.SetPaceTextActive(false);
+            mainTimer.transform.parent = topLeftInfoObject;
         }
 
         InfoComponent CreateInfoComponent(InfoComponentTemplate template, bool addToSide = true)
@@ -213,10 +218,10 @@ public class SplitsManager : MonoBehaviour
             switch (template.position)
             {
                 case UIComponentPosition.TopLeft:
-                    newComponent = InfoComponent.CreateInfoComponent(template, topLeftInfoObject);
+                    newComponent = InfoComponent.CreateInfoComponent(template);
                     break;
                 case UIComponentPosition.TopRight:
-                    newComponent = InfoComponent.CreateInfoComponent(template, topRightInfoObject);
+                    newComponent = InfoComponent.CreateInfoComponent(template);
                     break;
                 default:
                     throw new NotSupportedException($"Alignment of value {template.position} not supported!");
@@ -237,7 +242,7 @@ public class SplitsManager : MonoBehaviour
         {
             InfoComponentTemplate campfireTemplate = new(CAMPFIRE_STAT_NAME, GetDistanceToObjectiveString, SplitsStatsPlugin.LoadSprite(campfireImgPath), color: new Color(0.845f, 0.762f, 0.73f));
             campfireComponent = CreateInfoComponent(campfireTemplate);
-            
+
         }
 
         // Add any remaining custom objects.
@@ -283,6 +288,8 @@ public class SplitsManager : MonoBehaviour
             currMapHandler = currGameObject.GetComponentInChildren<MapHandler>();
             if (currMapHandler != null) break;
         }
+
+        Instance = this;
     }
 
     public static void SetAlignment(RectTransform currObject, UIComponentPosition position)
