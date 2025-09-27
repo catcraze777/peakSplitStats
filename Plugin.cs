@@ -282,7 +282,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 if (progressPoint.title == "PEAK")
                 {
                     splitsManagerInstance.EndTimer(Segment.TheKiln);
-                    if (SettingsManager.showPaceNearGoals) splitsManagerInstance.mainTimer.SetPaceTextActive(true);
+                    if (SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled) splitsManagerInstance.mainTimer.SetPaceTextActive(true);
                     animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[Segment.TheKiln], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
                     splitsManagerInstance.UpdateTimerPositions();
 

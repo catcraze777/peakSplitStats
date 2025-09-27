@@ -347,7 +347,7 @@ public class TimerComponent : InfoComponent
         {
             float currRunTime = time + (startTime - runStartTime);
             float currRunPace = currRunTime - targetRunTime;
-            if (!GetPaceTextActive() && SettingsManager.showPaceOnTimeTrigger && currRunPace >= SettingsManager.paceTimeTrigger) SetPaceTextActive(true);
+            if (!GetPaceTextActive() && SettingsManager.showPaceOnTimeTrigger && currRunPace >= SettingsManager.paceTimeTrigger && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
 
             tmpTextPace.text = GetTimeString(currRunPace, false, false, precisionDigits > 0u ? 1u : 0u, true);
             float textWidth = tmpText.GetPreferredValues().x;
@@ -427,7 +427,7 @@ public class TimerComponent : InfoComponent
         neverStarted = false;
         startTime = startingTime;
         endTime = -1.0f;
-        if (SettingsManager.showPaceOnStart) SetPaceTextActive(true);
+        if (SettingsManager.showPaceOnStart && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
         SetCurrColor(activeColor);
         return timerOn = true;
     }
@@ -454,7 +454,7 @@ public class TimerComponent : InfoComponent
         if (!timerOn) return false;
         endTime = endingTime;
         UpdateText(currTime);
-        if (SettingsManager.showPaceOnEnd) SetPaceTextActive(true);
+        if (SettingsManager.showPaceOnEnd && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
         timerOn = false;
         SetCurrColor(inactiveColor);
         if (tmpTextPace != null) tmpTextPace.color = tmpTextPace.color * SplitsManager.INACTIVE_COLOR_SCALE;

@@ -317,7 +317,7 @@ public class SplitsManager : MonoBehaviour
     {
         // Update timer positions if they're being animated right now.
         UpdateTimerPositions();
-        if (SettingsManager.timersEnabled && SettingsManager.segmentTimersEnabled && SettingsManager.showPaceNearGoals) ShowPaceNearGoals();
+        if (SettingsManager.timersEnabled && SettingsManager.segmentTimersEnabled && SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled) ShowPaceNearGoals();
     }
 
     /// <summary>

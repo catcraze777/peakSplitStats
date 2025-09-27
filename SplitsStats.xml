@@ -49,7 +49,7 @@
             </summary>
             <typeparam name="T">BaseUIComponent or one of its defined subclasses.</typeparam>
             <param name="name">The name to use for this component's gameObject.</param>
-            <param name="parent">The parent transform to set as this component's gameObject's parent.</param>
+            <param name="parent">The parent transform to set as this component's gameObject's parent. Setting to null creates the object as a scene root object.</param>
             <returns>A BaseUIComponent attached to a newly created gameObject. Matches type of template since BaseUIComponent is abstract.</returns>
         </member>
         <member name="M:SplitsStats.BaseUIComponent.Start">
@@ -140,7 +140,7 @@
             </summary>
             <typeparam name="T">InfoComponent or one of its defined subclasses.</typeparam>
             <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-            <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent.</param>
+            <param name="parent">The parent transform to set as this InfoComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
             <returns>A InfoComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
         </member>
         <member name="M:SplitsStats.InfoComponent.Start">
@@ -429,7 +429,7 @@
             Create and return a TimerComponent attached to a new gameObject parented to a provided transform.
             </summary>
             <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
             <returns>A TimerComponent attached to a newly created gameObject.</returns>
         </member>
         <member name="M:SplitsStats.TimerComponent.CreateTimerComponent``1(SplitsStats.InfoComponentTemplate,UnityEngine.Transform)">
@@ -438,7 +438,7 @@
             </summary>
             <typeparam name="T">TimerComponent or one of its defined subclasses.</typeparam>
             <param name="template">A template to use to fill in basic data needed for constructing the internal processes and game objects.</param>
-            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent.</param>
+            <param name="parent">The parent transform to set as this TimerComponent's gameObject's parent. Setting to null creates the object as a scene root object.</param>
             <returns>A TimerComponent attached to a newly created gameObject. Matches type of template if using a subclass.</returns>
         </member>
         <member name="M:SplitsStats.TimerComponent.Start">
