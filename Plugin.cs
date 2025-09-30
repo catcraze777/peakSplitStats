@@ -10,6 +10,7 @@ using TMPro;
 using Photon.Pun;
 using System.Reflection;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SplitsStats;
 
@@ -29,7 +30,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
     private static GameObject animManagerGameObject;
     private static AnimationManager animManager;
 
-    private static bool hasTerrainRandomiser = false;
+    private static bool _hasTerrainRandomiser = false;
+    public static bool hasTerrainRandomiser { get { return _hasTerrainRandomiser; } private set { _hasTerrainRandomiser = value; } }
 
     private const float FONT_CHANGE_DURATION = 0.4f;
     private const bool alwaysSave = true;
@@ -163,8 +165,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                     if (hasTerrainRandomiser)
                     {
-                        RunSaveManager.currentRun.wasRandomized = TerrainRandomiser.Plugin.shouldRandomise;
-                        RunSaveManager.currentRun.seed = TerrainRandomiser.Plugin.masterSeed;
+                        RunSaveManager.currentRun.wasRandomized = TerrainRandomiserInteractor.shouldRandomise();
+                        RunSaveManager.currentRun.seed = TerrainRandomiserInteractor.masterSeed();
                     }
 
                     RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
@@ -196,11 +198,11 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     }
                     if (SettingsManager.categorizeByLevel)
                         if (RunSaveManager.currentRun.wasRandomized)
-                            if (!TerrainRandomiser.Plugin.autoRandomise && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
+                            if (!TerrainRandomiserInteractor.autoRandomise() && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
                             else __instance.text.text += $"   RANDOM";
                         else __instance.text.text += $"   {RunSaveManager.currentRun.levelName.Replace("Level_", "DAILY #")}";
                     else if (RunSaveManager.currentRun.wasRandomized && SettingsManager.categorizeByTerrainRandomizer)
-                        if (!TerrainRandomiser.Plugin.autoRandomise && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
+                        if (!TerrainRandomiserInteractor.autoRandomise() && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
                         else __instance.text.text += $"   RANDOM";
                 }
             }
@@ -386,5 +388,38 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         RunSaveManager.InitRunSaveManager();
 
         hasTerrainRandomiser = Chainloader.PluginInfos.ContainsKey("com.snosz.terrainrandomiser");
+    }
+}
+
+public class TerrainRandomiserInteractor
+{
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    public static bool shouldRandomise()
+    {
+        if (SplitsStatsPlugin.hasTerrainRandomiser)
+        {
+            return TerrainRandomiser.Plugin.shouldRandomise;
+        }
+        else return false;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    public static bool autoRandomise()
+    {
+        if (SplitsStatsPlugin.hasTerrainRandomiser)
+        {
+            return TerrainRandomiser.Plugin.autoRandomise;
+        }
+        else return false;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    public static int masterSeed()
+    {
+        if (SplitsStatsPlugin.hasTerrainRandomiser)
+        {
+            return TerrainRandomiser.Plugin.masterSeed;
+        }
+        else return -1;
     }
 }

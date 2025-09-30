@@ -338,7 +338,6 @@ public class SplitsManager : MonoBehaviour
             currObject.anchoredPosition += new Vector2(0f, -currentYPos);
 
             currentYPos += objectHeight * PIVOT_Y + LINE_SPACING;
-            SplitsStatsPlugin.Logger.LogInfo($"y offset: {currentYPos}");
         }
 
         void AppendInfo(RectTransform currObject, BaseUIComponent currInfo)
