@@ -53,21 +53,21 @@ public class SplitsManager : MonoBehaviour
         {Segment.TheKiln,   new Color(1.0f, 0.344f, 0.25f)}
     };
 
-    public const string stopwatchImgPath = "img/stopwatch.png";
-    public const string heightImgPath = "img/height.png";
-    public const string campfireImgPath = "img/campfire.png";
-    public const string peakImgPath = "img/peak.png";
+    public const string stopwatchImgPath = "img_stopwatch.png";
+    public const string heightImgPath = "img_height.png";
+    public const string campfireImgPath = "img_campfire.png";
+    public const string peakImgPath = "img_peak.png";
 
     public const string HEIGHT_STAT_NAME = "Height Stat";
     public const string CAMPFIRE_STAT_NAME = "Campfire Stat";
 
     public static readonly Dictionary<Segment, string> splitImgPaths = new Dictionary<Segment, string>
     {
-        {Segment.Beach,     "img/shore.png"},
-        {Segment.Tropics,   "img/tropics.png"},
-        {Segment.Alpine,    "img/alpmesa.png"},
-        {Segment.Caldera,   "img/caldera.png"},
-        {Segment.TheKiln,   "img/kiln.png"}
+        {Segment.Beach,     "img_shore.png"},
+        {Segment.Tropics,   "img_tropics.png"},
+        {Segment.Alpine,    "img_alpmesa.png"},
+        {Segment.Caldera,   "img_caldera.png"},
+        {Segment.TheKiln,   "img_kiln.png"}
     };
 
     public const float INITIAL_COLOR_SCALE = 0.7f;

@@ -62,14 +62,21 @@ public class SplitsStatsPlugin : BaseUnityPlugin
     /// <param name="relativeImgPath"> The file location of the image relative to the calling assembly location. </param>
     public static Sprite LoadSprite(string relativeImgPath)
     {
-        string pluginFolder = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
-        string imgPath = Path.Combine(pluginFolder, relativeImgPath);
-        byte[] fileData = System.IO.File.ReadAllBytes(imgPath);
+        try
+        {
+            string pluginFolder = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+            string imgPath = Path.Combine(pluginFolder, relativeImgPath);
+            byte[] fileData = System.IO.File.ReadAllBytes(imgPath);
 
-        Texture2D tempTexture = new Texture2D(1, 1);
-        tempTexture.LoadImage(fileData);
+            Texture2D tempTexture = new Texture2D(1, 1);
+            tempTexture.LoadImage(fileData);
 
-        return Sprite.Create(tempTexture, new Rect(0, 0, tempTexture.width, tempTexture.height), new Vector2(0.5f, 0.5f));
+            return Sprite.Create(tempTexture, new Rect(0, 0, tempTexture.width, tempTexture.height), new Vector2(0.5f, 0.5f));
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -233,7 +240,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 }
                 if (s == Segment.TheKiln)
                 {
-                    splitsManagerInstance.ChangeCampfireIcon(LoadSprite(SplitsManager.peakImgPath));
+                    Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
+                    if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
                 }
                 splitsManagerInstance.UpdateTimerPositions();
             }
