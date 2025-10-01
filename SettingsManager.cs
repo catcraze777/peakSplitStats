@@ -39,6 +39,9 @@ public class SettingsManager
     public static ConfigEntry<bool> enablePaceConfig;
     public static bool enablePace { get { return enablePaceConfig?.Value ?? true; } private set { if (enablePaceConfig != null) enablePaceConfig.Value = value; } }
 
+    public static ConfigEntry<bool> useAverageRunConfig;
+    public static bool useAverageRun { get { return useAverageRunConfig?.Value ?? false; } private set { if (useAverageRunConfig != null) useAverageRunConfig.Value = value; } }
+
     public static ConfigEntry<bool> showPaceOnStartConfig;
     public static bool showPaceOnStart { get { return showPaceOnStartConfig?.Value ?? false; } private set { if (showPaceOnStartConfig != null) showPaceOnStartConfig.Value = value; } }
 
@@ -115,7 +118,7 @@ public class SettingsManager
     {
         if (config == null) return;
         
-        timersEnabledConfig = config.Bind("1. General", "Enable Timer", segmentTimersEnabled, "Show the main speedrunning timer.");
+        timersEnabledConfig = config.Bind("1. General", "Enable Timer", timersEnabled, "Show the main speedrunning timer.");
         segmentTimersEnabledConfig = config.Bind("1. General", "Show Segment Timers", segmentTimersEnabled, "Show the times for individual biome segments.");
         isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
@@ -123,6 +126,7 @@ public class SettingsManager
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
 
         enablePaceConfig = config.Bind("2. Run Pace/Intervals", "Enable Pace/Intervals", enablePace, "Display how far ahead or behind you are from your best record next to each timer. The record used for pacing is based on the categorization settings.");
+        useAverageRunConfig = config.Bind("2. Run Pace/Intervals", "Display Average Pace", useAverageRun, "Set to true to display your average times instead of the record time.");
         showPaceOnStartConfig = config.Bind("2. Run Pace/Intervals", "Show On Timer/Segment Start", showPaceOnStart, "Show the current run pace/interval as soon as the timer starts.");
         paceTriggerDistanceConfig = config.Bind("2. Run Pace/Intervals", "Show When Near End", paceTriggerDistance, "Trigger distance for when the player nears the next campfire/key point. The full run pace/interval displays when reaching the Peak. Set to less than 5.0 to disable.");
         paceTimeTriggerConfig = config.Bind("2. Run Pace/Intervals", "Show At Specific Time", paceTimeTrigger, "Show the pace/interval when it reaches the specified time (in seconds). The full run pace/interval displays when reaching the Peak. Set to more than 3600.0 (one hour) to disable.");

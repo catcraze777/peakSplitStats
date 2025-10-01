@@ -11,12 +11,26 @@ namespace SplitsStats;
 
 public class RunSaveManager
 {
+    public static RunTime targetRun { get { if (SettingsManager.useAverageRun) return averageRun; else return fastestRun; } }
+    public static float targetShore { get { if (SettingsManager.useAverageRun) return averageShore; else return fastestShore; } }
+    public static float targetTropics { get { if (SettingsManager.useAverageRun) return averageTropics; else return fastestTropics; } }
+    public static float targetAlpmesa { get { if (SettingsManager.useAverageRun) return averageAlpmesa; else return fastestAlpmesa; } }
+    public static float targetCaldera { get { if (SettingsManager.useAverageRun) return averageCaldera; else return fastestCaldera; } }
+    public static float targetKiln { get { if (SettingsManager.useAverageRun) return averageKiln; else return fastestKiln; } }
+
     public static RunTime fastestRun { get; private set; }
     public static float fastestShore { get; private set; }
     public static float fastestTropics { get; private set; }
     public static float fastestAlpmesa { get; private set; }
     public static float fastestCaldera { get; private set; }
     public static float fastestKiln { get; private set; }
+
+    public static RunTime averageRun { get; private set; }
+    public static float averageShore { get; private set; }
+    public static float averageTropics { get; private set; }
+    public static float averageAlpmesa { get; private set; }
+    public static float averageCaldera { get; private set; }
+    public static float averageKiln { get; private set; }
 
     /// <summary>
     /// The run info of the current run the player is actively on.
@@ -154,19 +168,99 @@ public class RunSaveManager
         fastestAlpmesa = -1.0f;
         fastestCaldera = -1.0f;
         fastestKiln = -1.0f;
+
+        averageRun = new RunTime();
+        averageRun.finalTime = 0.0f;
+        int numCompleteRuns = 0;
+
+        averageShore = 0.0f;
+        int numShores = 0;
+        averageTropics = 0.0f;
+        int numTropics = 0;
+        averageAlpmesa = 0.0f;
+        int numAlpmesa = 0;
+        averageCaldera = 0.0f;
+        int numCaldera = 0;
+        averageKiln = 0.0f;
+        int numKiln = 0;
+
         foreach (RunTime run in runStorage)
         {
             if (InputCategorizationFunc != null)
+            {
                 if (!InputCategorizationFunc(run)) continue;
-            else if (CategorizationFunc != null && !CategorizationFunc(run)) continue;
+            }
+            else if (CategorizationFunc != null)
+            {
+                if (!CategorizationFunc(run)) continue;
+            }
 
-            if (run.runFinished && (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime)) fastestRun = new RunTime(run);
-            if (run.shoreTime > 0.0f && (fastestShore == -1.0f || run.shoreTime < fastestShore)) fastestShore = run.shoreTime;
-            if (run.tropicsTime > 0.0f && (fastestTropics == -1.0f || run.tropicsTime < fastestTropics)) fastestTropics = run.tropicsTime;
-            if (run.alpmesaTime > 0.0f && (fastestAlpmesa == -1.0f || run.alpmesaTime < fastestAlpmesa)) fastestAlpmesa = run.alpmesaTime;
-            if (run.calderaTime > 0.0f && (fastestCaldera == -1.0f || run.calderaTime < fastestCaldera)) fastestCaldera = run.calderaTime;
-            if (run.kilnTime > 0.0f && (fastestKiln == -1.0f || run.kilnTime < fastestKiln)) fastestKiln = run.kilnTime;
+            if (run.runFinished && (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime))
+            {
+                fastestRun = new RunTime(run);
+                averageRun.finalTime += run.finalTime;
+                numCompleteRuns++;
+            }
+
+            if (run.shoreTime > 0.0f && (fastestShore == -1.0f || run.shoreTime < fastestShore))
+            {
+                fastestShore = run.shoreTime;
+                averageShore += run.shoreTime;
+                numShores++;
+            }
+
+            if (run.tropicsTime > 0.0f && (fastestTropics == -1.0f || run.tropicsTime < fastestTropics))
+            {
+                fastestTropics = run.tropicsTime;
+                averageTropics += run.tropicsTime;
+                numTropics++;
+            }
+
+            if (run.alpmesaTime > 0.0f && (fastestAlpmesa == -1.0f || run.alpmesaTime < fastestAlpmesa))
+            {
+                fastestAlpmesa = run.alpmesaTime;
+                averageAlpmesa += run.alpmesaTime;
+                numAlpmesa++;
+            }
+
+            if (run.calderaTime > 0.0f && (fastestCaldera == -1.0f || run.calderaTime < fastestCaldera))
+            {
+                fastestCaldera = run.calderaTime;
+                averageCaldera += run.calderaTime;
+                numCaldera++;
+            }
+
+            if (run.kilnTime > 0.0f && (fastestKiln == -1.0f || run.kilnTime < fastestKiln))
+            {
+                fastestKiln = run.kilnTime;
+                averageKiln += run.kilnTime;
+                numKiln++;
+            }
         }
+
+        if (numShores > 0) averageShore /= numShores;
+        else averageShore = -1.0f;
+
+        if (numTropics > 0) averageTropics /= numTropics;
+        else averageTropics = -1.0f;
+
+        if (numAlpmesa > 0) averageAlpmesa /= numAlpmesa;
+        else averageAlpmesa = -1.0f;
+
+        if (numCaldera > 0) averageCaldera /= numCaldera;
+        else averageCaldera = -1.0f;
+
+        if (numKiln > 0) averageKiln /= numKiln;
+        else averageKiln = -1.0f;
+
+        if (numCompleteRuns > 0) { averageRun.finalTime /= numCompleteRuns; averageRun.runFinished = true; }
+        else { averageRun.finalTime = -1.0f; averageRun.runFinished = false; }
+
+        averageRun.shoreTime = averageShore;
+        averageRun.tropicsTime = averageTropics;
+        averageRun.alpmesaTime = averageAlpmesa;
+        averageRun.calderaTime = averageCaldera;
+        averageRun.kilnTime = averageKiln;
     }
 }
 

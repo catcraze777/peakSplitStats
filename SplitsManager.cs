@@ -88,19 +88,19 @@ public class SplitsManager : MonoBehaviour
     public void SetRunTargets()
     {
         setupCheck();
-        if (RunSaveManager.fastestRun.finalTime > 0.0f && mainTimer != null)    mainTimer.targetRunTime = RunSaveManager.fastestRun.finalTime;
+        if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null)    mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime;
 
-        if (RunSaveManager.fastestRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime =   RunSaveManager.fastestRun.shoreTime;
-        if (RunSaveManager.fastestRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.fastestRun.tropicsTime + splitTimers[Segment.Beach].targetRunTime;
-        if (RunSaveManager.fastestRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime =  RunSaveManager.fastestRun.alpmesaTime + splitTimers[Segment.Tropics].targetRunTime;
-        if (RunSaveManager.fastestRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.fastestRun.calderaTime + splitTimers[Segment.Alpine].targetRunTime;
-        if (RunSaveManager.fastestRun.kilnTime > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].targetRunTime = RunSaveManager.fastestRun.kilnTime + splitTimers[Segment.Caldera].targetRunTime;
+        if (RunSaveManager.targetRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime =   RunSaveManager.targetRun.shoreTime;
+        if (RunSaveManager.targetRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.targetRun.tropicsTime + splitTimers[Segment.Beach].targetRunTime;
+        if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime =  RunSaveManager.targetRun.alpmesaTime + splitTimers[Segment.Tropics].targetRunTime;
+        if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + splitTimers[Segment.Alpine].targetRunTime;
+        if (RunSaveManager.targetRun.kilnTime > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].targetRunTime = RunSaveManager.targetRun.kilnTime + splitTimers[Segment.Caldera].targetRunTime;
 
-        if (RunSaveManager.fastestShore > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].recordTime =   RunSaveManager.fastestShore;
-        if (RunSaveManager.fastestTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.fastestTropics;
-        if (RunSaveManager.fastestAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime =  RunSaveManager.fastestAlpmesa;
-        if (RunSaveManager.fastestCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.fastestCaldera;
-        if (RunSaveManager.fastestKiln > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].recordTime = RunSaveManager.fastestKiln;
+        if (RunSaveManager.targetShore > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].recordTime =   RunSaveManager.targetShore;
+        if (RunSaveManager.targetTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.targetTropics;
+        if (RunSaveManager.targetAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime =  RunSaveManager.targetAlpmesa;
+        if (RunSaveManager.targetCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.targetCaldera;
+        if (RunSaveManager.targetKiln > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].recordTime = RunSaveManager.targetKiln;
     }
 
     public const float HEADER_FONT_SIZE = 50f;
