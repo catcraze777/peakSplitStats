@@ -217,7 +217,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(MapHandler), "GoToSegment")]
     private class MapHandlerPatcher
     {
-        private static void Prefix(MapHandler __instance, ref Segment s)
+        private static void Postfix(MapHandler __instance, ref Segment s)
         {
             try
             {
@@ -258,15 +258,15 @@ public class SplitsStatsPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(RunManager), "EndGame")]
     private class RunManagerPatcher
     {
-        private static void Prefix(RunManager __instance)
+        private static void Postfix(RunManager __instance)
         {
             try
             {
                 splitsManagerInstance.mainTimer.EndTimer();
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
-                    TimerComponent currTimer = splitsManagerInstance.splitTimers[currSegment];
                     if (currSegment == Segment.Peak) break;
+                    TimerComponent currTimer = splitsManagerInstance.splitTimers[currSegment];
                     bool paceTextOriginalStatus = currTimer.GetPaceTextActive();
                     currTimer.EndTimer();
                     currTimer.SetPaceTextActive(paceTextOriginalStatus);
@@ -285,10 +285,11 @@ public class SplitsStatsPlugin : BaseUnityPlugin
     [HarmonyPatch(typeof(MountainProgressHandler), "TriggerReached")]
     private class MountainProgressHandlerPatcher
     {
-        private static void Prefix(EndScreen __instance, MountainProgressHandler.ProgressPoint progressPoint)
+        private static void Postfix(EndScreen __instance, MountainProgressHandler.ProgressPoint progressPoint)
         {
             try
             {
+                Logger.LogInfo($"Current title is {progressPoint.title}!");
                 if (progressPoint.title == "PEAK")
                 {
                     splitsManagerInstance.EndTimer(Segment.TheKiln);
