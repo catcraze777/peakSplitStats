@@ -14,6 +14,20 @@ public class SplitsManager : MonoBehaviour
 
     public RectTransform topLeftInfoObject;
     public RectTransform topRightInfoObject;
+    public Vector2 TopLeftInfoObjectPosition
+    {
+        get
+        {
+            return UI_OFFSET;
+        }
+    }
+    public Vector2 TopRightInfoObjectPosition
+    {
+        get
+        {
+            return new Vector2(-UI_OFFSET.x - 4f, UI_OFFSET.y - 5f);
+        }
+    }
 
     public static BaseUIComponentList topLeftComponents;
     public static BaseUIComponentList topRightComponents;
@@ -81,6 +95,16 @@ public class SplitsManager : MonoBehaviour
     public TimerComponent mainTimer;
 
     private static MapHandler currMapHandler;
+
+    private static GameObject ascentUIObject;
+
+    private static float getAscentUIHeight()
+    {
+        TMP_Text ascentText = ascentUIObject.GetComponent<TMP_Text>();
+
+        if (!ascentUIObject.activeSelf || ascentText.text.Trim().Length <= 0) return 0.0f;
+        return ascentText.GetPreferredValues().y;
+    }
 
     /// <summary>
     /// Use RunSaveManager to set the target times for the timers.
@@ -150,7 +174,8 @@ public class SplitsManager : MonoBehaviour
         topRightComponents = new BaseUIComponentList();
 
         // Find Ascent UI to duplicate.
-        RectTransform ascentUITransform = guiManager.GetComponentInChildren<AscentUI>().GetComponent<RectTransform>();
+        SplitsManager.ascentUIObject = guiManager.GetComponentInChildren<AscentUI>().gameObject;
+        RectTransform ascentUITransform = SplitsManager.ascentUIObject.GetComponent<RectTransform>();
         if (SettingsManager.showCurrentCategory && SettingsManager.isCategorized) ascentUITransform.sizeDelta = new Vector2(1000f, ascentUITransform.sizeDelta.y);
         topLeftInfoObject = UnityEngine.Object.Instantiate(ascentUITransform, ascentUITransform.parent);
         topLeftInfoObject.name = $"Splits Manager";
@@ -167,8 +192,6 @@ public class SplitsManager : MonoBehaviour
         topLeftInfoObject.offsetMin = Vector2.zero;
         topLeftInfoObject.offsetMax = Vector2.zero;
         topLeftInfoObject.pivot = topLeftPivot;
-        topLeftInfoObject.anchoredPosition = Vector2.zero;
-        topLeftInfoObject.anchoredPosition += UI_OFFSET;
         topLeftInfoObject.localScale = new Vector3(SettingsManager.uiScaleSize, SettingsManager.uiScaleSize, SettingsManager.uiScaleSize);
 
         Vector2 topRightPivot = new Vector2(1.0f, 1f);
@@ -177,9 +200,9 @@ public class SplitsManager : MonoBehaviour
         topRightInfoObject.offsetMin = Vector2.zero;
         topRightInfoObject.offsetMax = Vector2.zero;
         topRightInfoObject.pivot = topRightPivot;
-        topRightInfoObject.anchoredPosition = Vector2.zero;
-        topRightInfoObject.anchoredPosition += new Vector2(-UI_OFFSET.x - 4f, UI_OFFSET.y - 5f);
         topRightInfoObject.localScale = new Vector3(SettingsManager.uiScaleSize, SettingsManager.uiScaleSize, SettingsManager.uiScaleSize);
+
+        UpdateInfoObjects();
 
         Destroy(topLeftInfoObject.GetComponent<TMP_Text>());
         Destroy(topRightInfoObject.GetComponent<TMP_Text>());
@@ -317,7 +340,22 @@ public class SplitsManager : MonoBehaviour
     {
         // Update timer positions if they're being animated right now.
         UpdateTimerPositions();
+        UpdateInfoObjects();
         if (SettingsManager.timersEnabled && SettingsManager.segmentTimersEnabled && SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled) ShowPaceNearGoals();
+    }
+
+    /// <summary>
+    /// Call to update the positions of the root info objects based on the user's config.
+    /// </summary>
+    public void UpdateInfoObjects()
+    {
+        topLeftInfoObject.anchoredPosition = Vector2.zero;
+        topLeftInfoObject.anchoredPosition += TopLeftInfoObjectPosition;
+        topLeftInfoObject.anchoredPosition += SettingsManager.timerVectorOffset;
+
+        topRightInfoObject.anchoredPosition = Vector2.zero;
+        topRightInfoObject.anchoredPosition += TopRightInfoObjectPosition;
+        topRightInfoObject.anchoredPosition += SettingsManager.statsVectorOffset;
     }
 
     /// <summary>
@@ -368,7 +406,7 @@ public class SplitsManager : MonoBehaviour
         AppendFromList(topLeftComponents);
 
         // Move info stats.
-        currentYPos = 0;
+        currentYPos = SettingsManager.statsAutoAdjust ? getAscentUIHeight() : 0f;
         AppendFromList(topRightComponents);
     }
 

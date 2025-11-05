@@ -91,6 +91,25 @@ public class SettingsManager
 
 
 
+    public static ConfigEntry<int> timerHorizontalOffsetConfig;
+    public static int timerHorizontalOffset { get { return timerHorizontalOffsetConfig?.Value ?? 0; } private set { if (timerHorizontalOffsetConfig != null) timerHorizontalOffsetConfig.Value = value; } }
+
+    public static ConfigEntry<int> timerVerticalOffsetConfig;
+    public static int timerVerticalOffset { get { return timerVerticalOffsetConfig?.Value ?? 0; } private set { if (timerVerticalOffsetConfig != null) timerVerticalOffsetConfig.Value = value; } }
+
+    public static Vector2 timerVectorOffset { get { return new Vector2(timerHorizontalOffset, timerVerticalOffset); } }
+
+    public static ConfigEntry<int> statsHorizontalOffsetConfig;
+    public static int statsHorizontalOffset { get { return statsHorizontalOffsetConfig?.Value ?? 0; } private set { if (statsHorizontalOffsetConfig != null) statsHorizontalOffsetConfig.Value = value; } }
+
+    public static ConfigEntry<int> statsVerticalOffsetConfig;
+    public static int statsVerticalOffset { get { return statsVerticalOffsetConfig?.Value ?? 0; } private set { if (statsVerticalOffsetConfig != null) statsVerticalOffsetConfig.Value = value; } }
+
+    public static Vector2 statsVectorOffset { get { return new Vector2(statsHorizontalOffset, statsVerticalOffset); } }
+
+    public static ConfigEntry<bool> statsAutoAdjustConfig;
+    public static bool statsAutoAdjust { get { return statsAutoAdjustConfig?.Value ?? true; } private set { if (statsAutoAdjustConfig != null) statsAutoAdjustConfig.Value = value; } }
+
     public static ConfigEntry<bool> canEditEndScreenTimeConfig;
     public static bool canEditEndScreenTime { get { return canEditEndScreenTimeConfig?.Value ?? true; } private set { if (canEditEndScreenTimeConfig != null) canEditEndScreenTimeConfig.Value = value; } }
 
@@ -141,6 +160,11 @@ public class SettingsManager
         categorizeByTerrainRandomizerConfig = config.Bind("3. Categorizing", "By Terrain Randomiser", categorizeByTerrainRandomizer, "Separate runs depending on if the Terrain Randomiser mod is used.");
         categorizeBySeedConfig = config.Bind("3. Categorizing", "By Seed", categorizeBySeed, "Separate runs by seed number if the Terrain Randomiser mod is used.");
 
+        timerHorizontalOffsetConfig = config.Bind("4. Misc", "Timer Horizontal Offset", timerHorizontalOffset, "Adjust the timers' positions in the top left horizontally.");
+        timerVerticalOffsetConfig = config.Bind("4. Misc", "Timer Vertical Offset", timerVerticalOffset, "Adjust the timers' positions in the top left vertically.");
+        statsHorizontalOffsetConfig = config.Bind("4. Misc", "Extra Stats Horizontal Offset", statsHorizontalOffset, "Adjust the stats' positions in the top right horizontally.");
+        statsVerticalOffsetConfig = config.Bind("4. Misc", "Extra Stats Vertical Offset", statsVerticalOffset, "Adjust the stats' positions in the top right vertically.");
+        statsAutoAdjustConfig = config.Bind("4. Misc", "Extra Stats Automatically Adjust Position", statsAutoAdjust, "Adjust the stats' positions in the top right based on if the ascent text is active. Enabled by default but can be disabled if manually moving it's location.");
         canEditEndScreenTimeConfig = config.Bind("4. Misc", "Edit End Screen Time", canEditEndScreenTime, "Allow this mod to change the end-game results' displayed run time to add precision, show final pace from record if enabled, and show real time if enabled.");
         onlyShowFinalRunPaceIfRecordConfig = config.Bind("4. Misc", "Only Show Final Pace If Record", onlyShowFinalRunPaceIfRecord, "Only show the final pace on the end-game results if the run is a new record.");
         precisionInTimerConfig = config.Bind("4. Misc", "Digits of Precision", precisionInTimer, "Set the number of decimal digits to display in the timers.");
