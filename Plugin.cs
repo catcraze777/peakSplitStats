@@ -289,7 +289,6 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
-                Logger.LogInfo($"Current title is {progressPoint.title}!");
                 if (progressPoint.title == "PEAK")
                 {
                     splitsManagerInstance.EndTimer(Segment.TheKiln);
@@ -399,7 +398,7 @@ public class TerrainRandomiserInteractor
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.shouldRandomise;
+            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.enableRandomiser ?? false;
         }
         else return false;
     }
@@ -409,7 +408,7 @@ public class TerrainRandomiserInteractor
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.autoRandomise;
+            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.autoRandomSeed ?? false;
         }
         else return false;
     }
@@ -419,7 +418,7 @@ public class TerrainRandomiserInteractor
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.masterSeed;
+            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.seed ?? -1;
         }
         else return -1;
     }
