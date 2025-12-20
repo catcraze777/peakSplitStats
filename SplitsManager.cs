@@ -463,6 +463,30 @@ public class SplitsManager : MonoBehaviour
         }
     }
 
+    public static Vector3 FlagPolePosition
+    {
+        get
+        {
+            if (_flagPolePosition == Vector3.zero) FindFlagPole();
+            return _flagPolePosition;
+        }
+    }
+    private static Vector3 _flagPolePosition = Vector3.zero;
+
+    public static void FindFlagPole()
+    {
+        GameObject volcanoSegmentObject = currMapHandler.segments[(int)Segment.TheKiln].segmentParent.transform.parent.gameObject;
+        foreach (Transform child in volcanoSegmentObject.GetComponentsInChildren<Transform>())
+        {
+            if (child.gameObject.name == "Flag Pole")
+            {
+                _flagPolePosition = child.position;
+                return;
+            }
+        }
+    }
+
+
     /// <summary>
     /// Get the position of the player's next objective (campfires then the peak).
     /// </summary>
@@ -473,20 +497,12 @@ public class SplitsManager : MonoBehaviour
         {
             Segment currSegment = currMapHandler.GetCurrentSegment();
             if (currSegment >= Segment.Peak) return Vector3.zero;
+            if (currSegment == Segment.TheKiln) return FlagPolePosition;
 
             MapHandler.MapSegment currMapSegment = currMapHandler.segments[(int)currSegment];
             Transform currCampfire = currMapSegment?.segmentCampfire?.GetComponentInChildren<Campfire>()?.transform;
 
-            if (currSegment == Segment.TheKiln)
-            {
-                GameObject volcanoSegmentObject = currMapSegment.segmentParent.transform.parent.gameObject;
-                foreach (Transform child in volcanoSegmentObject.GetComponentsInChildren<Transform>())
-                {
-                    if (child.gameObject.name == "Flag Pole") return child.position;
-                }
-            }
-            else if (currCampfire != null)
-                return currCampfire.position;
+            if (currCampfire != null) return currCampfire.position;
         }
         return Vector3.zero;
     }

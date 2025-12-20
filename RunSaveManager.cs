@@ -83,8 +83,9 @@ public class RunSaveManager
     }
 
     /// <summary> Save the information currently stored in this.currentRun </summary>
+    /// <param name="forceSave"> Turn to true to save even when no times are stored in the current run. </param>
     /// <returns> A boolean indicating if the save was successful. </returns>
-    public static bool SaveRun()
+    public static bool SaveRun(bool forceSave = false)
     {
         if (!IsRunActive())
         {
@@ -96,7 +97,7 @@ public class RunSaveManager
 
         try
         {
-            if (currentRun.HasTimes()) TryWriteSave();
+            if (currentRun.HasTimes() || forceSave) TryWriteSave();
             return true;
         }
         catch (Exception ex)

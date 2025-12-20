@@ -171,6 +171,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                     RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
                     splitsManagerInstance.SetRunTargets();
+
+                    SplitsManager.FindFlagPole();
                 }
             }
             catch (NullReferenceException) { } // Don't really care if a null reference occurs
@@ -393,12 +395,23 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
 public class TerrainRandomiserInteractor
 {
+    //[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    private static TerrainRandomiser.MapSettings CurrSettings
+    { 
+        get
+        {
+            if (!SplitsStatsPlugin.hasTerrainRandomiser) return null;
+            else if (PhotonNetwork.IsMasterClient) return TerrainRandomiser.Plugin.Instance?.mapSettings;
+            else return TerrainRandomiser.Plugin.Instance?.roomMapSettings;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     public static bool shouldRandomise()
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.enableRandomiser ?? false;
+            return CurrSettings?.enableRandomiser ?? false;
         }
         else return false;
     }
@@ -408,7 +421,7 @@ public class TerrainRandomiserInteractor
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.autoRandomSeed ?? false;
+            return CurrSettings?.autoRandomSeed ?? false;
         }
         else return false;
     }
@@ -418,7 +431,7 @@ public class TerrainRandomiserInteractor
     {
         if (SplitsStatsPlugin.hasTerrainRandomiser)
         {
-            return TerrainRandomiser.Plugin.Instance?.roomMapSettings?.seed ?? -1;
+            return CurrSettings?.seed ?? -1;
         }
         else return -1;
     }
