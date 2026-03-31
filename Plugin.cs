@@ -124,38 +124,15 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     {
                         RunSaveManager.FinishRun();
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError((object)($"Error in GUIManager Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(CharacterStats), "Update")]
-    private class CharacterStatsPatcher
-    {
-        private static void Postfix(CharacterStats __instance)
-        {
-            try
-            {
-                if (splitsManagerInstance == null || !splitsManagerInstance.isSetup || RunManager.Instance.timeSinceRunStarted <= 0.0f) return;
-                // Start the initial timer.
-                //Logger.LogInfo($"Timeline Size: {__instance.timelineInfo.Count}   Shore Timer Start Time: {(shoreTimer != null ? shoreTimer.startTime : "Not initialized")}");
-                if (__instance.timelineInfo.Count > 0 && splitsManagerInstance.mainTimer.startTime == -1.0f)
-                {
-                    float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.timeSinceRunStarted : Time.time - RunManager.Instance.timeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
-                    splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace);
-                    splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
-                    splitsManagerInstance.mainTimer.SetHeight(SplitsManager.HEADER_FONT_SIZE);
-                    splitsManagerInstance.StartTimerAtTime(Segment.Beach, startTime);
-                    splitsManagerInstance.SetTimerFontSize(Segment.Beach, SplitsManager.ACTIVE_FONT_SIZE);
-                    splitsManagerInstance.UpdateTimerPositions();
-                    Logger.LogInfo($"Starting shore timer!");
 
                     animManagerGameObject = new GameObject("SplitsStatsPlugin AnimationManager");
                     animManager = animManagerGameObject.AddComponent<AnimationManager>();
+
+                    if (!RunSaveManager.IsRunValid())
+                    {
+                        Logger.LogWarning("Run not valid to save, not saving time! This is likely due to a custom run or loading a saved run.");
+                        return;
+                    }
 
                     RunSaveManager.StartNewRun();
                     RunSaveManager.currentRun.playerCount = PhotonNetwork.PlayerList.Length;
@@ -171,19 +148,44 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                     RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
                     splitsManagerInstance.SetRunTargets();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError((object)($"Error in GUIManager Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+            }
+        }
+    }
+    
+    [HarmonyPatch(typeof(RunManager), "StartRun")]
+    private class RunManagerStartRunPatcher
+    {
+        private static void Postfix(RunManager __instance)
+        {
+            try
+            {
+                if (SceneManager.GetActiveScene().name != "Airport" && __instance != null)
+                {
+                    float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.timeSinceRunStarted : Time.time - RunManager.Instance.timeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
+                    splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace);
+                    splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
+                    splitsManagerInstance.mainTimer.SetHeight(SplitsManager.HEADER_FONT_SIZE);
+                    splitsManagerInstance.StartTimerAtTime(Segment.Beach, startTime);
+                    splitsManagerInstance.SetTimerFontSize(Segment.Beach, SplitsManager.ACTIVE_FONT_SIZE);
+                    splitsManagerInstance.UpdateTimerPositions();
+                    Logger.LogInfo($"Starting shore timer!");
 
                     SplitsManager.FindFlagPole();
                 }
             }
-            catch (NullReferenceException) { } // Don't really care if a null reference occurs
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in CharacterStats Update patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in RunManager StartRun patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }
 
-    [HarmonyPatch(typeof(AscentUI), "Update")]
+    [HarmonyPatch(typeof(AscentUI), "Start")]
     private class AscentUIPatcher
     {
         private static void Postfix(AscentUI __instance)
@@ -210,7 +212,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in AscentUI Update patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in AscentUI Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
 
@@ -223,8 +225,18 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                Logger.LogInfo("Starting GoToSegment Postfix!");
+
+                if (RunSettings.isMiniRun)
+                {
+                    splitsManagerInstance.mainTimer.EndTimer();
+                    splitsManagerInstance.UpdateTimerPositions();
+                    return;
+                }
+
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
+                    Logger.LogInfo($"Checking if {currSegment} timer needs to be updated...");
                     if (currSegment == Segment.Peak) break;
                     Segment nextSegment = (Segment)((int)currSegment + 1);
                     if (s == currSegment)
@@ -265,6 +277,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             try
             {
                 splitsManagerInstance.mainTimer.EndTimer();
+                if (!RunSaveManager.IsRunValid() || !SettingsManager.segmentTimersEnabled) return;
+
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
                     if (currSegment == Segment.Peak) break;
@@ -354,7 +368,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         newPaceTextObject.gameObject.SetActive(true);
                         TMP_Text newPaceText = newPaceTextObject.GetComponent<TMP_Text>();
                         newPaceText.fontSizeMax = 18f;
-                        newPaceText.text = TimerComponent.GetTimeString(currPace, false, false, SettingsManager.precisionInTimer > 0u ? 1u : 0u, true);
+                        newPaceText.text = TimerComponent.GetTimeString(currPace, false, false, SettingsManager.precisionInTimer > 0 ? 1 : 0, true);
 
                         if (SettingsManager.useColorPace)
                         {
@@ -384,12 +398,12 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         SettingsManager.InitSettingsManager(Config);
         SettingsManager.LoadConfigBindings();
 
-        _harmony = new Harmony(PLUGIN_GUID);
-        _harmony.PatchAll();
-
         RunSaveManager.InitRunSaveManager();
 
         hasTerrainRandomiser = Chainloader.PluginInfos.ContainsKey("com.snosz.terrainrandomiser");
+
+        _harmony = new Harmony(PLUGIN_GUID);
+        _harmony.PatchAll();
     }
 }
 

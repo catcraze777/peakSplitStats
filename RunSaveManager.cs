@@ -32,6 +32,8 @@ public class RunSaveManager
     public static float averageCaldera { get; private set; }
     public static float averageKiln { get; private set; }
 
+    public static int totalAttempts { get; private set; }
+
     /// <summary>
     /// The run info of the current run the player is actively on.
     /// The object reference will get assigned and unasigned by RunSaveManager.
@@ -54,6 +56,7 @@ public class RunSaveManager
     /// <summary> Try to read the save or load the default when creating the RunSaveManager object. </summary>
     public static void InitRunSaveManager()
     {
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Initializing Run Save Manager...");
         if (jsonFilePath == null) GetFilePaths();
         try
         {
@@ -83,10 +86,12 @@ public class RunSaveManager
     }
 
     /// <summary> Save the information currently stored in this.currentRun </summary>
-    /// <param name="forceSave"> Turn to true to save even when no times are stored in the current run. </param>
+    /// <param name="forceSave"> Turn to true to save even when no times are stored in the current run. Defaults to the value specified in the plugin settings.</param>
     /// <returns> A boolean indicating if the save was successful. </returns>
-    public static bool SaveRun(bool forceSave = false)
+    public static bool SaveRun(bool? forceSave = null)
     {
+        bool shouldForceSave = forceSave ?? SettingsManager.saveEmptyRuns;
+
         if (!IsRunActive())
         {
             if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to save a run when no run has been started!");
@@ -97,7 +102,7 @@ public class RunSaveManager
 
         try
         {
-            if (currentRun.HasTimes() || forceSave) TryWriteSave();
+            if (currentRun.HasTimes() || shouldForceSave) TryWriteSave();
             return true;
         }
         catch (Exception ex)
@@ -112,6 +117,7 @@ public class RunSaveManager
     public static bool FinishRun()
     {
         bool successfulSave = SaveRun();
+        ClearInternalSavedRuns();
 
         if (successfulSave)
         {
@@ -127,6 +133,15 @@ public class RunSaveManager
         return currentRun != null;
     }
 
+    /// <summary>
+    /// Returns true if run is valid and should be saved.
+    /// </summary>
+    public static bool IsRunValid()
+    {
+        if (RunSettings.IsCustomRun) return false;
+        if (Peak.Quicksave.ShouldUseSaveData) return false;
+        return true;
+    }
 
     // File reading and writing.
     private static string jsonDirectory;
@@ -144,12 +159,30 @@ public class RunSaveManager
         if (!File.Exists(jsonFilePath)) throw new FileNotFoundException($"Could not find file {saveFileName} to load data from!");
         string json = File.ReadAllText(jsonFilePath);
         runStorage = JsonConvert.DeserializeObject<List<RunTime>>(json);
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Successfully read saved runs!");
     }
 
     public static void TryWriteSave()
     {
         string json = JsonConvert.SerializeObject(runStorage, Formatting.Indented);
         File.WriteAllText(jsonFilePath, json);
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Successfully wrote saved runs!");
+    }
+
+    /// <summary>
+    /// Clears the internally saved records to be reloaded again. This does NOT erase runs or their data, it can be loaded again using GetRunRecords().
+    /// </summary>
+    private static void ClearInternalSavedRuns()
+    {
+        fastestRun = new RunTime();
+        fastestShore = -1.0f;
+        fastestTropics = -1.0f;
+        fastestAlpmesa = -1.0f;
+        fastestCaldera = -1.0f;
+        fastestKiln = -1.0f;
+
+        averageRun = new RunTime();
+        averageRun.finalTime = 0.0f;
     }
 
     /// <summary>
@@ -163,15 +196,9 @@ public class RunSaveManager
     /// </param>
     public static void GetRunRecords(Func<RunTime, bool> InputCategorizationFunc = null)
     {
-        fastestRun = new RunTime();
-        fastestShore = -1.0f;
-        fastestTropics = -1.0f;
-        fastestAlpmesa = -1.0f;
-        fastestCaldera = -1.0f;
-        fastestKiln = -1.0f;
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Loading run records...");
 
-        averageRun = new RunTime();
-        averageRun.finalTime = 0.0f;
+        ClearInternalSavedRuns();
         int numCompleteRuns = 0;
 
         averageShore = 0.0f;
@@ -184,6 +211,7 @@ public class RunSaveManager
         int numCaldera = 0;
         averageKiln = 0.0f;
         int numKiln = 0;
+        totalAttempts = 0;
 
         foreach (RunTime run in runStorage)
         {
@@ -195,6 +223,8 @@ public class RunSaveManager
             {
                 if (!CategorizationFunc(run)) continue;
             }
+
+            totalAttempts++;
 
             if (run.runFinished && (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime))
             {
@@ -262,6 +292,8 @@ public class RunSaveManager
         averageRun.alpmesaTime = averageAlpmesa;
         averageRun.calderaTime = averageCaldera;
         averageRun.kilnTime = averageKiln;
+
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Records loaded!");
     }
 }
 

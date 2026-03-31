@@ -51,7 +51,7 @@ public class TimerComponent : InfoComponent
     /// <summary>
     /// The number of decimal digits to display in the time, set to 0 or less to display only whole seconds.
     /// </summary>
-    public uint precisionDigits;
+    public int precisionDigits;
 
     /// <summary>
     /// A boolean that determines if this timer uses real time or in-game time. Can be set externally to adjust only if the timer isn't running.
@@ -138,7 +138,6 @@ public class TimerComponent : InfoComponent
 
     private void initializeComponent()
     {
-        uiPosition = UIComponentPosition.TopLeft;
         startTime = -1.0f;
         endTime = -1.0f;
         recordTime = -1.0f;
@@ -182,7 +181,6 @@ public class TimerComponent : InfoComponent
         }
         else tmpTextPace = tempComponentStorage;
 
-        tmpTextPace.autoSizeTextContainer = true;
         tmpTextPace.textWrappingMode = (TextWrappingModes)0;
         tmpTextPace.alignment = uiPosition == UIComponentPosition.TopLeft ? TextAlignmentOptions.Left : TextAlignmentOptions.Right;
         tmpTextPace.lineSpacing = 0f;
@@ -196,7 +194,6 @@ public class TimerComponent : InfoComponent
 
         SetCurrColor(initialColor);
 
-        this.gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(INITIAL_HEIGHT, INITIAL_HEIGHT * 2.0f);
         UpdateText(0.0f);
     }
 
@@ -220,7 +217,7 @@ public class TimerComponent : InfoComponent
     /// <param name="precisionDigits"> Should hundreths of a second be shown? </param>
     /// <param name="showPositiveSign"> If true, a "+" is appended to the front of the time if it is positive. A "-" will always be present for negative times. </param>
     /// <returns> The time represented as a string. </returns>
-    public static string GetTimeString(float totalSeconds, bool showHour = false, bool showMinute = true, uint precisionDigits = 1, bool showPositiveSign = false)
+    public static string GetTimeString(float totalSeconds, bool showHour = false, bool showMinute = true, int precisionDigits = 1, bool showPositiveSign = false)
     {
         bool isNegativeTime = totalSeconds < 0.0f;
         if (isNegativeTime) totalSeconds = Math.Abs(totalSeconds);
@@ -317,7 +314,7 @@ public class TimerComponent : InfoComponent
             {
                 float textWidth = tmpText.GetPreferredValues().x;
                 int direction = uiPosition == UIComponentPosition.TopLeft ? 1 : -1;
-                tmpTextPace.transform.localPosition = new Vector3(direction * (textWidth + minimumPaceTextOffset), 10.0f, 0.0f);
+                tmpTextPace.transform.localPosition = new Vector3(direction * (textWidth + minimumPaceTextOffset), -6.0f, 0.0f);
             }
             else tmpTextPace.transform.localPosition = Vector3.zero;
         }
@@ -342,19 +339,24 @@ public class TimerComponent : InfoComponent
     /// <param name="time"> The time (in seconds) to show in the text. </param>
     private void UpdateText(float time)
     {
-        if (tmpText != null) tmpText.text = GetTimeString(time);
+        if (tmpText != null)
+        {
+            tmpText.text = GetTimeString(time);
+            if (timerOn) SetCurrColor(activeColor);
+        }
+
         if (tmpTextPace != null && tmpText != null && targetRunTime > 0.0f) 
         {
             float currRunTime = time + (startTime - runStartTime);
             float currRunPace = currRunTime - targetRunTime;
             if (!GetPaceTextActive() && SettingsManager.showPaceOnTimeTrigger && currRunPace >= SettingsManager.paceTimeTrigger && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
 
-            tmpTextPace.text = GetTimeString(currRunPace, false, false, precisionDigits > 0u ? 1u : 0u, true);
+            tmpTextPace.text = GetTimeString(currRunPace, false, false, precisionDigits > 0 ? 1 : 0, true);
             float textWidth = tmpText.GetPreferredValues().x;
             float currPaceTextPosition = tmpTextPace.transform.localPosition.x;
             float distanceAwayFromPreferedLocation = currPaceTextPosition - textWidth - minimumPaceTextOffset;
             int direction = uiPosition == UIComponentPosition.TopLeft ? 1 : -1;
-            if (Math.Abs(distanceAwayFromPreferedLocation) > triggerPaceTextOffsetAdjustment) tmpTextPace.transform.localPosition = new Vector3(direction * (textWidth + minimumPaceTextOffset), 10.0f, 0.0f);
+            if (Math.Abs(distanceAwayFromPreferedLocation) > triggerPaceTextOffsetAdjustment) tmpTextPace.transform.localPosition = new Vector3(direction * (textWidth + minimumPaceTextOffset), -6.0f, 0.0f);
 
             if (!SettingsManager.useColorPace) tmpTextPace.color = tmpText.color;
             else if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = goldSplitColor;

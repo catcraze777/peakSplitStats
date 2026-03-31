@@ -28,6 +28,9 @@ public class SettingsManager
     public static ConfigEntry<float> uiScaleSizeConfig;
     public static float uiScaleSize { get { return uiScaleSizeConfig?.Value ?? 1.0f; } private set { if (uiScaleSizeConfig != null) uiScaleSizeConfig.Value = value; } }
 
+    public static ConfigEntry<bool> showCurrentAttemptNumberConfig;
+    public static bool showCurrentAttemptNumber { get { return showCurrentAttemptNumberConfig?.Value ?? true; } private set { if (showCurrentAttemptNumberConfig != null) showCurrentAttemptNumberConfig.Value = value; } }
+
     public static ConfigEntry<bool> showCurrentHeightConfig;
     public static bool showCurrentHeight { get { return showCurrentHeightConfig?.Value ?? true; } private set { if (showCurrentHeightConfig != null) showCurrentHeightConfig.Value = value; } }
 
@@ -51,7 +54,7 @@ public class SettingsManager
     public static bool showPaceNearGoals { get { return paceTriggerDistance > MINIMUM_TRIGGER_DISTANCE; } }
 
     public static ConfigEntry<float> paceTimeTriggerConfig;
-    public static float paceTimeTrigger { get { return paceTimeTriggerConfig?.Value ?? -60f; } private set { if (paceTimeTriggerConfig != null) paceTimeTriggerConfig.Value = value; } }
+    public static float paceTimeTrigger { get { return paceTimeTriggerConfig?.Value ?? 60f; } private set { if (paceTimeTriggerConfig != null) paceTimeTriggerConfig.Value = value; } }
     public const float MAXIMUM_TRIGGER_TIME = 3600.0f;
     public static bool showPaceOnTimeTrigger { get { return paceTimeTrigger < MAXIMUM_TRIGGER_TIME; } }
 
@@ -116,8 +119,8 @@ public class SettingsManager
     public static ConfigEntry<bool> onlyShowFinalRunPaceIfRecordConfig;
     public static bool onlyShowFinalRunPaceIfRecord { get { return onlyShowFinalRunPaceIfRecordConfig?.Value ?? false; } private set { if (onlyShowFinalRunPaceIfRecordConfig != null) onlyShowFinalRunPaceIfRecordConfig.Value = value; } }
 
-    public static ConfigEntry<uint> precisionInTimerConfig;
-    public static uint precisionInTimer { get { return precisionInTimerConfig?.Value ?? 1u; } private set { if (precisionInTimerConfig != null) precisionInTimerConfig.Value = value; } }
+    public static ConfigEntry<int> precisionInTimerConfig;
+    public static int precisionInTimer { get { return precisionInTimerConfig?.Value ?? 1; } private set { if (precisionInTimerConfig != null) precisionInTimerConfig.Value = value; } }
 
     public static ConfigEntry<bool> useColorSegmentsConfig;
     public static bool useColorSegments { get { return useColorSegmentsConfig?.Value ?? true; } private set { if (useColorSegmentsConfig != null) useColorSegmentsConfig.Value = value; } }
@@ -125,12 +128,16 @@ public class SettingsManager
     public static ConfigEntry<bool> useColorPaceConfig;
     public static bool useColorPace { get { return useColorPaceConfig?.Value ?? true; } private set { if (useColorPaceConfig != null) useColorPaceConfig.Value = value; } }
 
+    public static ConfigEntry<bool> saveEmptyRunsConfig;
+    public static bool saveEmptyRuns { get { return saveEmptyRunsConfig?.Value ?? true; } private set { if (saveEmptyRunsConfig != null) saveEmptyRunsConfig.Value = value; } }
+
     
 
 
     public static void InitSettingsManager(ConfigFile inputConfig)
     {
         config = inputConfig;
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Initialized Settings Manager!");
     }
 
     public static void LoadConfigBindings()
@@ -141,6 +148,7 @@ public class SettingsManager
         segmentTimersEnabledConfig = config.Bind("1. General", "Show Segment Timers", segmentTimersEnabled, "Show the times for individual biome segments.");
         isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
+        showCurrentAttemptNumberConfig = config.Bind("1. General", "Show Current Attempt Number", showCurrentAttemptNumber, "Show the player's current run attempt number. This number is based on the number of saved runs that fit the categorization settings. Will never show if the run cannot be saved due to a custom or loaded run.");
         showCurrentHeightConfig = config.Bind("1. General", "Show Current Height", showCurrentHeight, "Show the player's current height/altitude.");
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
 
@@ -170,5 +178,8 @@ public class SettingsManager
         precisionInTimerConfig = config.Bind("4. Misc", "Digits of Precision", precisionInTimer, "Set the number of decimal digits to display in the timers.");
         useColorSegmentsConfig = config.Bind("4. Misc", "Color Segment Timers", useColorSegments, "Color each segment to match the biome, otherwise color them white.");
         useColorPaceConfig = config.Bind("4. Misc", "Color Pace/Interval Text", useColorPace, "Color each segment's pace/interval time to match with the pace, otherwise color them white. (Use Green/Red/Gold Splits)");
+        saveEmptyRunsConfig = config.Bind("4. Misc", "Save Empty Times", saveEmptyRuns, "Allows saving runs that have no times to save (died/quit before finishing the Shore). Set to true if you'd like these runs to count for the attempts counter.");
+
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Loaded Settings Config Bindings!");
     }
 }

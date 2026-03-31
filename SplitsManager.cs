@@ -72,6 +72,7 @@ public class SplitsManager : MonoBehaviour
     public const string campfireImgPath = "img_campfire.png";
     public const string peakImgPath = "img_peak.png";
 
+    public const string ATTEMPT_STAT_NAME = "Attempt Stat";
     public const string HEIGHT_STAT_NAME = "Height Stat";
     public const string CAMPFIRE_STAT_NAME = "Campfire Stat";
 
@@ -88,7 +89,8 @@ public class SplitsManager : MonoBehaviour
     public const float INACTIVE_COLOR_SCALE = 0.5f;
     public const float ICON_SIZE_SCALE = 1.1f;
 
-    public const float PIVOT_Y = 0.4f;
+    public const float PIVOT_Y = 0.5f;
+    public const float PIVOT_Y_ICON = 0.6f;
 
     public static float PACE_TRIGGER_DISTANCE { get { return SettingsManager.paceTriggerDistance; } }
 
@@ -254,9 +256,16 @@ public class SplitsManager : MonoBehaviour
         }
 
         // Create the height status.
+        if (SettingsManager.showCurrentAttemptNumber && RunSaveManager.IsRunValid())
+        {
+            InfoComponentTemplate attemptNumberTemplate = new(ATTEMPT_STAT_NAME, () => $"Attempt {RunSaveManager.totalAttempts + 1}");
+            CreateInfoComponent(attemptNumberTemplate);
+        }
+
+        // Create the height status.
         if (SettingsManager.showCurrentHeight)
         {
-            InfoComponentTemplate heightTemplate = new(HEIGHT_STAT_NAME, GetHeightText, SplitsStatsPlugin.LoadSprite(heightImgPath));
+            InfoComponentTemplate heightTemplate = new(HEIGHT_STAT_NAME, GetHeightText, SplitsStatsPlugin.LoadSprite(heightImgPath), color: new Color(0.845f, 0.833f, 0.73f));
             CreateInfoComponent(heightTemplate);
         }
 
@@ -278,9 +287,9 @@ public class SplitsManager : MonoBehaviour
         }
 
         // Create a timer for each segment.
-        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled)
+        splitTimers = new Dictionary<Segment, TimerComponent>();
+        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && RunSaveManager.IsRunValid())
         {
-            splitTimers = new Dictionary<Segment, TimerComponent>();
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
             {
                 if (currSegment == Segment.Peak) break;
@@ -544,7 +553,7 @@ public class SplitsManager : MonoBehaviour
     public bool StartTimer(Segment targetSegment)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return false;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
         return splitTimers[targetSegment].StartTimer();
     }
 
@@ -558,7 +567,7 @@ public class SplitsManager : MonoBehaviour
     public bool StartTimerAtTime(Segment targetSegment, float startTime)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return false;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
         return splitTimers[targetSegment].StartAtTime(startTime);
     }
 
@@ -571,7 +580,7 @@ public class SplitsManager : MonoBehaviour
     public bool EndTimer(Segment targetSegment)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return false;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
         return splitTimers[targetSegment].EndTimer();
     }
 
@@ -585,7 +594,7 @@ public class SplitsManager : MonoBehaviour
     public bool EndTimerAtTime(Segment targetSegment, float endTime)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return false;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
         return splitTimers[targetSegment].EndAtTime(endTime);
     }
 
@@ -598,7 +607,7 @@ public class SplitsManager : MonoBehaviour
     public bool SetTimerFontSize(Segment targetSegment, float newFontSize)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return false;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
         splitTimers[targetSegment].SetHeight(newFontSize);
         return true;
     }
@@ -611,7 +620,7 @@ public class SplitsManager : MonoBehaviour
     public float GetTimerFontSize(Segment targetSegment)
     {
         setupCheck();
-        if (!splitTimers.ContainsKey(targetSegment)) return -1.0f;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return -1.0f;
         return splitTimers[targetSegment].GetHeight();
     }
 }

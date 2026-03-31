@@ -59,6 +59,7 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     public virtual void Start()
     {
         rectTransform.anchoredPosition = Vector2.zero;
+        rectTransform.sizeDelta = new Vector2(0.0f, INITIAL_HEIGHT);
     }
 
     /// <summary>

@@ -122,10 +122,10 @@ public class InfoComponent : BaseUIComponent
         // Create the template icon.
         templateIconObject = UnityEngine.Object.Instantiate<RectTransform>(staminaIcon, ascentUITransform.parent);
         templateIconObject.name = "InfoComponent Template Icon";
+        templateIconObject.sizeDelta = new Vector2(200, 200);
         templateIconObject.offsetMin = Vector2.zero;
         templateIconObject.offsetMax = Vector2.zero;
         templateIconObject.anchoredPosition = Vector2.zero;
-        templateIconObject.sizeDelta = new Vector2(200, 200);
 
         templateTextObject.gameObject.SetActive(false);
         templateIconObject.gameObject.SetActive(false);
@@ -159,6 +159,7 @@ public class InfoComponent : BaseUIComponent
         T currComponent = CreateBaseUIComponent<T>(template.name, parent);
         currComponent.template = new InfoComponentTemplate(template);
         currComponent.SetSortingPriority(template.priority);
+        currComponent.uiPosition = template.position;
 
         return currComponent;
     }
@@ -170,7 +171,6 @@ public class InfoComponent : BaseUIComponent
     {
         base.Start();
 
-        if (template != null) uiPosition = template.position;
         SplitsManager.SetAlignment(rectTransform, uiPosition);
         rectTransform.pivot = new Vector2(rectTransform.pivot.x, 1.0f);
 
@@ -203,10 +203,11 @@ public class InfoComponent : BaseUIComponent
             {
                 RectTransform tempIconRectTransform = UnityEngine.Object.Instantiate<RectTransform>(InfoComponent.templateIconObject, gameObject.transform);
                 tempIconRectTransform.gameObject.SetActive(true);
-                SplitsManager.SetAlignment(tempIconRectTransform, uiPosition);
-                tempIconRectTransform.anchoredPosition = Vector2.zero;
-                tempIconRectTransform.sizeDelta = new Vector2(INITIAL_HEIGHT * SplitsManager.ICON_SIZE_SCALE, INITIAL_HEIGHT * SplitsManager.ICON_SIZE_SCALE);
                 tempIconRectTransform.name = template.name + " Icon";
+                tempIconRectTransform.sizeDelta = new Vector2(INITIAL_HEIGHT * SplitsManager.ICON_SIZE_SCALE, INITIAL_HEIGHT * SplitsManager.ICON_SIZE_SCALE);
+                tempIconRectTransform.anchoredPosition = Vector2.zero;
+                SplitsManager.SetAlignment(tempIconRectTransform, uiPosition);
+                tempIconRectTransform.pivot += new Vector2(0.0f, SplitsManager.PIVOT_Y_ICON - SplitsManager.PIVOT_Y);
                 tempIconRectTransform.GetComponent<UnityEngine.UI.Image>().sprite = template.icon;
                 iconRectTransform = tempIconRectTransform;
 
@@ -228,8 +229,6 @@ public class InfoComponent : BaseUIComponent
         tmpText.outlineColor = new Color32((byte)0, (byte)0, (byte)0, byte.MaxValue);
         tmpText.outlineWidth = 0f; //0.055f;
         tmpText.color = currColor;
-
-        this.gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(INITIAL_HEIGHT, INITIAL_HEIGHT * 2.0f);
     }
 
     /// <summary>
