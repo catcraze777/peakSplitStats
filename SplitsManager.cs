@@ -209,6 +209,7 @@ public class SplitsManager : MonoBehaviour
         Destroy(topLeftInfoObject.GetComponent<TMP_Text>());
         Destroy(topRightInfoObject.GetComponent<TMP_Text>());
 
+        // Helper function to add timer components to the screen based on their configured position.
         TimerComponent CreateTimerComponent(InfoComponentTemplate template, bool addToSide = true)
         {
             TimerComponent newComponent;
@@ -237,6 +238,7 @@ public class SplitsManager : MonoBehaviour
             mainTimer.transform.parent = topLeftInfoObject;
         }
 
+        // Helper function to add generic info components to the screen based on their configured position.
         InfoComponent CreateInfoComponent(InfoComponentTemplate template, bool addToSide = true)
         {
             InfoComponent newComponent;
@@ -288,7 +290,7 @@ public class SplitsManager : MonoBehaviour
 
         // Create a timer for each segment.
         splitTimers = new Dictionary<Segment, TimerComponent>();
-        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && RunSaveManager.IsRunValid())
+        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && !RunSettings.isMiniRun)
         {
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
             {
@@ -505,7 +507,11 @@ public class SplitsManager : MonoBehaviour
         if (currMapHandler != null)
         {
             Segment currSegment = currMapHandler.GetCurrentSegment();
-            if (currSegment >= Segment.Peak) return Vector3.zero;
+            if (currSegment >= Segment.Peak)
+            {
+                SplitsStatsPlugin.Logger.LogError($"Attempted to get objective position for unknown segment {currSegment}!");
+                return Vector3.zero;
+            }
             if (currSegment == Segment.TheKiln) return FlagPolePosition;
 
             MapHandler.MapSegment currMapSegment = currMapHandler.segments[(int)currSegment];

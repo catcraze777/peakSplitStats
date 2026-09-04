@@ -166,7 +166,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (SceneManager.GetActiveScene().name != "Airport" && __instance != null)
                 {
-                    float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.timeSinceRunStarted : Time.time - RunManager.Instance.timeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
+                    float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.TimeSinceRunStarted : Time.time - RunManager.Instance.TimeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
                     splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace);
                     splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
                     splitsManagerInstance.mainTimer.SetHeight(SplitsManager.HEADER_FONT_SIZE);
@@ -227,33 +227,27 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 Logger.LogInfo("Starting GoToSegment Postfix!");
 
-                if (RunSettings.isMiniRun)
+                if (RunSettings.isMiniRun && s != Segment.TheKiln)
                 {
                     splitsManagerInstance.mainTimer.EndTimer();
                     splitsManagerInstance.UpdateTimerPositions();
                     return;
                 }
 
-                foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
-                {
-                    Logger.LogInfo($"Checking if {currSegment} timer needs to be updated...");
-                    if (currSegment == Segment.Peak) break;
-                    Segment nextSegment = (Segment)((int)currSegment + 1);
-                    if (s == currSegment)
-                    {
-                        splitsManagerInstance.StartTimer(currSegment);
-                        animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-                    }
-                    if (s == nextSegment)
-                    {
-                        splitsManagerInstance.EndTimer(currSegment);
-                        animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-                        Logger.LogInfo($"Split reached, entering {nextSegment}!");
+                Logger.LogInfo($"Split reached, entering {s}!");
 
-                        RunSaveManager.currentRun[currSegment] = splitsManagerInstance.splitTimers[currSegment].totalTime;
-                        RunSaveManager.SaveRun();
-                    }
+                splitsManagerInstance.StartTimer(s);
+                if (splitsManagerInstance.splitTimers.ContainsKey(s))
+                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+
+                splitsManagerInstance.EndTimer(s - 1);
+                if (splitsManagerInstance.splitTimers.ContainsKey(s - 1))
+                {
+                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s - 1], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                    RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
+                    RunSaveManager.SaveRun();
                 }
+                
                 if (s == Segment.TheKiln)
                 {
                     Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
@@ -277,7 +271,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             try
             {
                 splitsManagerInstance.mainTimer.EndTimer();
-                if (!RunSaveManager.IsRunValid() || !SettingsManager.segmentTimersEnabled) return;
+                if (!SettingsManager.segmentTimersEnabled) return;
 
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
@@ -287,7 +281,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     currTimer.EndTimer();
                     currTimer.SetPaceTextActive(paceTextOriginalStatus);
                     currTimer.SetCurrColor(currTimer.inactiveColor);
-                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                    if (splitsManagerInstance.splitTimers.ContainsKey(currSegment))
+                        animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
                 }
                 splitsManagerInstance.UpdateTimerPositions();
             }
@@ -307,13 +302,25 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (progressPoint.title == "PEAK")
                 {
-                    splitsManagerInstance.EndTimer(Segment.TheKiln);
+                    if (RunSettings.isMiniRun)
+                    {
+                        splitsManagerInstance.mainTimer.EndTimer();
+                        splitsManagerInstance.UpdateTimerPositions();
+                        return;
+                    }
+                    
                     if (SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled) splitsManagerInstance.mainTimer.SetPaceTextActive(true);
-                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[Segment.TheKiln], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-                    splitsManagerInstance.UpdateTimerPositions();
 
-                    RunSaveManager.currentRun[Segment.TheKiln] = splitsManagerInstance.splitTimers[Segment.TheKiln].totalTime;
-                    RunSaveManager.SaveRun();
+                    if (splitsManagerInstance.splitTimers.ContainsKey(Segment.TheKiln))
+                    {
+                        splitsManagerInstance.EndTimer(Segment.TheKiln);
+                        animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[Segment.TheKiln], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                        splitsManagerInstance.UpdateTimerPositions();
+
+                        RunSaveManager.currentRun[Segment.TheKiln] = splitsManagerInstance.splitTimers[Segment.TheKiln].totalTime;
+                        RunSaveManager.SaveRun();
+                    }
+                    
                 }
             }
             catch (Exception ex)

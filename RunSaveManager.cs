@@ -98,6 +98,12 @@ public class RunSaveManager
             return false;
         }
 
+        if (!IsRunValid())
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to save an invalid run! If you'd like to save custom runs, please enable the setting in the config file.");
+            return false;
+        }
+
         runStorage[^1] = new RunTime(currentRun);
 
         try
@@ -395,6 +401,9 @@ public class RunTime
                     return calderaTime;
                 case Segment.TheKiln:
                     return kilnTime;
+                case Segment.Void:
+                    SplitsStatsPlugin.Logger.LogError($"Attempted to get Void time when it's not implemented!");
+                    return -1;
                 default:
                     throw new IndexOutOfRangeException();
             }
@@ -417,6 +426,9 @@ public class RunTime
                     break;
                 case Segment.TheKiln:
                     kilnTime = value;
+                    break;
+                case Segment.Void:
+                    SplitsStatsPlugin.Logger.LogError($"Attempted to set Void time when it's not implemented!");
                     break;
                 default:
                     throw new IndexOutOfRangeException();
@@ -504,5 +516,6 @@ public enum Ascent : int
     Ascent4 = 4,
     Ascent5 = 5,
     Ascent6 = 6,
-    Ascent7 = 7
+    Ascent7 = 7,
+    Ascent8 = 8
 }
