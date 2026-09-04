@@ -232,44 +232,56 @@ public class RunSaveManager
 
             totalAttempts++;
 
-            if (run.runFinished && (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime))
+            if (run.runFinished)
             {
-                fastestRun = new RunTime(run);
+                if (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime)
+                    fastestRun = new RunTime(run);
+                
                 averageRun.finalTime += run.finalTime;
                 numCompleteRuns++;
             }
 
-            if (run.shoreTime > 0.0f && (fastestShore == -1.0f || run.shoreTime < fastestShore))
+            if (run.shoreTime > 0.0f)
             {
-                fastestShore = run.shoreTime;
+                if (fastestShore == -1.0f || run.shoreTime < fastestShore)
+                    fastestShore = run.shoreTime;
+                
                 averageShore += run.shoreTime;
                 numShores++;
             }
 
-            if (run.tropicsTime > 0.0f && (fastestTropics == -1.0f || run.tropicsTime < fastestTropics))
+            if (run.tropicsTime > 0.0f)
             {
-                fastestTropics = run.tropicsTime;
+                if (fastestTropics == -1.0f || run.tropicsTime < fastestTropics)
+                    fastestTropics = run.tropicsTime;
+                
                 averageTropics += run.tropicsTime;
                 numTropics++;
             }
 
-            if (run.alpmesaTime > 0.0f && (fastestAlpmesa == -1.0f || run.alpmesaTime < fastestAlpmesa))
+            if (run.alpmesaTime > 0.0f)
             {
-                fastestAlpmesa = run.alpmesaTime;
+                if (fastestAlpmesa == -1.0f || run.alpmesaTime < fastestAlpmesa)
+                    fastestAlpmesa = run.alpmesaTime;
+
                 averageAlpmesa += run.alpmesaTime;
                 numAlpmesa++;
             }
 
-            if (run.calderaTime > 0.0f && (fastestCaldera == -1.0f || run.calderaTime < fastestCaldera))
+            if (run.calderaTime > 0.0f)
             {
-                fastestCaldera = run.calderaTime;
+                if (fastestCaldera == -1.0f || run.calderaTime < fastestCaldera)
+                    fastestCaldera = run.calderaTime;
+
                 averageCaldera += run.calderaTime;
                 numCaldera++;
             }
 
-            if (run.kilnTime > 0.0f && (fastestKiln == -1.0f || run.kilnTime < fastestKiln))
+            if (run.kilnTime > 0.0f)
             {
-                fastestKiln = run.kilnTime;
+                if (fastestKiln == -1.0f || run.kilnTime < fastestKiln)
+                    fastestKiln = run.kilnTime;
+                
                 averageKiln += run.kilnTime;
                 numKiln++;
             }
@@ -299,7 +311,7 @@ public class RunSaveManager
         averageRun.calderaTime = averageCaldera;
         averageRun.kilnTime = averageKiln;
 
-        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Records loaded!");
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Loaded times from {totalAttempts} record(s)!");
     }
 }
 

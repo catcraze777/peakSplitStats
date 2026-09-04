@@ -114,6 +114,9 @@ public class SplitsManager : MonoBehaviour
     public void SetRunTargets()
     {
         setupCheck();
+
+        SplitsStatsPlugin.Logger.LogInfo($"Loading run targets...");
+
         if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null)    mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime;
 
         if (RunSaveManager.targetRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime =   RunSaveManager.targetRun.shoreTime;
@@ -126,7 +129,9 @@ public class SplitsManager : MonoBehaviour
         if (RunSaveManager.targetTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.targetTropics;
         if (RunSaveManager.targetAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime =  RunSaveManager.targetAlpmesa;
         if (RunSaveManager.targetCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.targetCaldera;
-        if (RunSaveManager.targetKiln > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].recordTime = RunSaveManager.targetKiln;
+        if (RunSaveManager.targetKiln > 0.0f && splitTimers.ContainsKey(Segment.TheKiln)) splitTimers[Segment.TheKiln].recordTime = RunSaveManager.targetKiln;
+        
+        SplitsStatsPlugin.Logger.LogInfo($"Loaded run targets!");
     }
 
     public const float HEADER_FONT_SIZE = 50f;
@@ -209,6 +214,8 @@ public class SplitsManager : MonoBehaviour
         Destroy(topLeftInfoObject.GetComponent<TMP_Text>());
         Destroy(topRightInfoObject.GetComponent<TMP_Text>());
 
+        SplitsStatsPlugin.Logger.LogInfo($"Initialized SplitsManager object anchors, beginning to load components...");
+
         // Helper function to add timer components to the screen based on their configured position.
         TimerComponent CreateTimerComponent(InfoComponentTemplate template, bool addToSide = true)
         {
@@ -225,6 +232,7 @@ public class SplitsManager : MonoBehaviour
                     throw new NotSupportedException($"Alignment of value {template.position} not supported!");
             }
             if (addToSide) AddInfoComponentToSide(newComponent);
+            SplitsStatsPlugin.Logger.LogInfo($"Created new \"{template.name}\" timer component...");
             return newComponent;
         }
 
@@ -254,6 +262,7 @@ public class SplitsManager : MonoBehaviour
                     throw new NotSupportedException($"Alignment of value {template.position} not supported!");
             }
             if (addToSide) AddInfoComponentToSide(newComponent);
+            SplitsStatsPlugin.Logger.LogInfo($"Created new \"{template.name}\" info component...");
             return newComponent;
         }
 
@@ -276,7 +285,6 @@ public class SplitsManager : MonoBehaviour
         {
             InfoComponentTemplate campfireTemplate = new(CAMPFIRE_STAT_NAME, GetDistanceToObjectiveString, SplitsStatsPlugin.LoadSprite(campfireImgPath), color: new Color(0.845f, 0.762f, 0.73f));
             campfireComponent = CreateInfoComponent(campfireTemplate);
-
         }
 
         // Add any remaining custom objects.
@@ -290,7 +298,7 @@ public class SplitsManager : MonoBehaviour
 
         // Create a timer for each segment.
         splitTimers = new Dictionary<Segment, TimerComponent>();
-        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && !RunSettings.isMiniRun)
+        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && !RunSettings.isMiniRun && !Peak.Quicksave.ShouldUseSaveData)
         {
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
             {
@@ -310,20 +318,26 @@ public class SplitsManager : MonoBehaviour
                 splitTimers[currSegment].SetPaceTextActive(false);
                 splitTimers[currSegment].SetSortingPriority(10 * ((int)currSegment + 1));
 
-                SplitsStatsPlugin.Logger.LogInfo($"{currSegment} Timer created!");
+                SplitsStatsPlugin.Logger.LogInfo($"Configured {currSegment} Timer!");
             }
         }
 
         UpdateTimerPositions();
 
         // Find current MapHandler
+        SplitsStatsPlugin.Logger.LogInfo($"Attempting to find MapHandler...");
         foreach (GameObject currGameObject in SceneManager.GetActiveScene().GetRootGameObjects())
         {
             currMapHandler = currGameObject.GetComponentInChildren<MapHandler>();
-            if (currMapHandler != null) break;
+            if (currMapHandler != null)
+            {
+                SplitsStatsPlugin.Logger.LogInfo($"MapHandler found!");
+                break;
+            }
         }
 
         Instance = this;
+        SplitsStatsPlugin.Logger.LogInfo($"Finished creating SplitsManager object!");
     }
 
     public static void SetAlignment(RectTransform currObject, UIComponentPosition position)
@@ -486,15 +500,19 @@ public class SplitsManager : MonoBehaviour
 
     public static void FindFlagPole()
     {
+        SplitsStatsPlugin.Logger.LogInfo($"Attempting to find flag pole...");
+
         GameObject volcanoSegmentObject = currMapHandler.segments[(int)Segment.TheKiln].segmentParent.transform.parent.gameObject;
         foreach (Transform child in volcanoSegmentObject.GetComponentsInChildren<Transform>())
         {
             if (child.gameObject.name == "Flag Pole")
             {
+                SplitsStatsPlugin.Logger.LogInfo($"Flag pole found!");
                 _flagPolePosition = child.position;
                 return;
             }
         }
+        SplitsStatsPlugin.Logger.LogWarning($"Couldn't find flag pole!");
     }
 
 
@@ -574,7 +592,7 @@ public class SplitsManager : MonoBehaviour
     {
         setupCheck();
         if (splitTimers?.ContainsKey(targetSegment) != true) return false;
-        return splitTimers[targetSegment].StartAtTime(startTime);
+        return splitTimers[targetSegment].StartTimerAtTime(startTime);
     }
 
     /// <summary>
@@ -601,7 +619,7 @@ public class SplitsManager : MonoBehaviour
     {
         setupCheck();
         if (splitTimers?.ContainsKey(targetSegment) != true) return false;
-        return splitTimers[targetSegment].EndAtTime(endTime);
+        return splitTimers[targetSegment].EndTimerAtTime(endTime);
     }
 
     /// <summary>

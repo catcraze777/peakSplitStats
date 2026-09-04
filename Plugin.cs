@@ -115,6 +115,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (SceneManager.GetActiveScene().name != "Airport" && __instance != null)
                 {
+                    Logger.LogInfo("Starting GUIManager.Start Postfix!");
+
                     Instance.Config.Reload();
 
                     splitsManagerInstance = SplitsManager.CreateSplitsManager(__instance, customStats);
@@ -123,16 +125,12 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     if (RunSaveManager.IsRunActive())
                     {
                         RunSaveManager.FinishRun();
+                        Logger.LogInfo("Ended an active run found stored in the RunSaveManager...");
                     }
 
                     animManagerGameObject = new GameObject("SplitsStatsPlugin AnimationManager");
                     animManager = animManagerGameObject.AddComponent<AnimationManager>();
-
-                    if (!RunSaveManager.IsRunValid())
-                    {
-                        Logger.LogWarning("Run not valid to save, not saving time! This is likely due to a custom run or loading a saved run.");
-                        return;
-                    }
+                    Logger.LogInfo("Created AnimationManager...");
 
                     RunSaveManager.StartNewRun();
                     RunSaveManager.currentRun.playerCount = PhotonNetwork.PlayerList.Length;
@@ -145,14 +143,18 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         RunSaveManager.currentRun.wasRandomized = TerrainRandomiserInteractor.shouldRandomise();
                         RunSaveManager.currentRun.seed = TerrainRandomiserInteractor.masterSeed();
                     }
+                    Logger.LogInfo("Loaded run information...");
 
                     RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
                     splitsManagerInstance.SetRunTargets();
+                    Logger.LogInfo("Loaded run targets...");
+
+                    Logger.LogInfo($"GUIManager.Start Postfix successfully completed!");
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in GUIManager Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in GUIManager.Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }
@@ -166,6 +168,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (SceneManager.GetActiveScene().name != "Airport" && __instance != null)
                 {
+                    Logger.LogInfo("Starting RunManager.StartRun Postfix!");
+
                     float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.TimeSinceRunStarted : Time.time - RunManager.Instance.TimeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
                     splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace);
                     splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
@@ -173,14 +177,16 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     splitsManagerInstance.StartTimerAtTime(Segment.Beach, startTime);
                     splitsManagerInstance.SetTimerFontSize(Segment.Beach, SplitsManager.ACTIVE_FONT_SIZE);
                     splitsManagerInstance.UpdateTimerPositions();
-                    Logger.LogInfo($"Starting shore timer!");
+                    Logger.LogInfo($"Started shore timer!");
 
                     SplitsManager.FindFlagPole();
+
+                    Logger.LogInfo($"RunManager.StartRun Postfix successfully completed!");
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in RunManager StartRun patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in RunManager.StartRun patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }
@@ -194,25 +200,36 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (SettingsManager.showCurrentCategory && SettingsManager.isCategorized)
                 {
+                    Logger.LogInfo("Starting AscentUI.Start Postfix!");
+
                     __instance.gameObject.SetActive(true);
                     if (SettingsManager.categorizeByPlayerCount)
                     {
                         __instance.text.text += $"   {RunSaveManager.currentRun.playerCount} SCOUT";
                         if (RunSaveManager.currentRun.playerCount > 1) __instance.text.text += "S";
+                        Logger.LogInfo("Added player count category text!");
                     }
                     if (SettingsManager.categorizeByLevel)
+                    {
                         if (RunSaveManager.currentRun.wasRandomized)
                             if (!TerrainRandomiserInteractor.autoRandomise() && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
                             else __instance.text.text += $"   RANDOM";
                         else __instance.text.text += $"   {RunSaveManager.currentRun.levelName.Replace("Level_", "DAILY #")}";
+                        Logger.LogInfo("Added level category text!");
+                    }
                     else if (RunSaveManager.currentRun.wasRandomized && SettingsManager.categorizeByTerrainRandomizer)
+                    {
                         if (!TerrainRandomiserInteractor.autoRandomise() && SettingsManager.categorizeBySeed) __instance.text.text += $"   SEEDED";
                         else __instance.text.text += $"   RANDOM";
+                        Logger.LogInfo("Added randomizer category text!");
+                    }
+
+                    Logger.LogInfo($"AscentUI.Start Postfix successfully completed!");
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in AscentUI Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in AscentUI.Start patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
 
@@ -225,7 +242,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
-                Logger.LogInfo("Starting GoToSegment Postfix!");
+                Logger.LogInfo("Starting MapHandler.GoToSegment Postfix!");
 
                 if (RunSettings.isMiniRun && s != Segment.TheKiln)
                 {
@@ -239,6 +256,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 splitsManagerInstance.StartTimer(s);
                 if (splitsManagerInstance.splitTimers.ContainsKey(s))
                     animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                Logger.LogInfo($"Started {s} timer!");
 
                 splitsManagerInstance.EndTimer(s - 1);
                 if (splitsManagerInstance.splitTimers.ContainsKey(s - 1))
@@ -247,17 +265,21 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
                     RunSaveManager.SaveRun();
                 }
+                Logger.LogInfo($"Stopped {s - 1} timer!");
                 
                 if (s == Segment.TheKiln)
                 {
                     Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
                     if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
+                    Logger.LogInfo($"Updated campfire icon to flag!");
                 }
                 splitsManagerInstance.UpdateTimerPositions();
+
+                Logger.LogInfo($"MapHandler.GoToSegment Postfix successfully completed!");
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in MapHandler GoToSegment patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in MapHandler.GoToSegment patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
 
@@ -270,12 +292,21 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                Logger.LogInfo("Starting RunManager.EndGame Postfix!");
+
                 splitsManagerInstance.mainTimer.EndTimer();
-                if (!SettingsManager.segmentTimersEnabled) return;
+
+                if (!SettingsManager.segmentTimersEnabled)
+                {
+                    Logger.LogInfo("Segment timers disabled, GoToSegment Postfix successfully completed!");
+                    return;
+                }
 
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
                     if (currSegment == Segment.Peak) break;
+
+                    Logger.LogInfo($"Stopping {currSegment} timer...");
                     TimerComponent currTimer = splitsManagerInstance.splitTimers[currSegment];
                     bool paceTextOriginalStatus = currTimer.GetPaceTextActive();
                     currTimer.EndTimer();
@@ -283,12 +314,16 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     currTimer.SetCurrColor(currTimer.inactiveColor);
                     if (splitsManagerInstance.splitTimers.ContainsKey(currSegment))
                         animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+
+                    Logger.LogInfo($"Successfully stopped {currSegment} timer!");
                 }
                 splitsManagerInstance.UpdateTimerPositions();
+
+                Logger.LogInfo("RunManager.EndGame Postfix successfully completed!");
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in RunManager EndGame patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in RunManager.EndGame patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }
@@ -302,30 +337,41 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 if (progressPoint.title == "PEAK")
                 {
+                    Logger.LogInfo($"Starting MountainProgressHandler.TriggerReached postfix!");
+
                     if (RunSettings.isMiniRun)
                     {
+                        Logger.LogInfo($"Peak reached, stopping timer for minirun...");
                         splitsManagerInstance.mainTimer.EndTimer();
                         splitsManagerInstance.UpdateTimerPositions();
+                        Logger.LogInfo($"Timer stopped, TriggerReached Postfix successfully completed!");
                         return;
                     }
-                    
-                    if (SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled) splitsManagerInstance.mainTimer.SetPaceTextActive(true);
+
+                    if (SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled)
+                    {
+                        Logger.LogInfo($"Peak reached, showing main timer pace text");
+                        splitsManagerInstance.mainTimer.SetPaceTextActive(true);
+                    }
 
                     if (splitsManagerInstance.splitTimers.ContainsKey(Segment.TheKiln))
                     {
+                        Logger.LogInfo($"Peak reached, stopping {Segment.TheKiln} timer...");
                         splitsManagerInstance.EndTimer(Segment.TheKiln);
                         animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[Segment.TheKiln], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
                         splitsManagerInstance.UpdateTimerPositions();
+                        Logger.LogInfo($"{Segment.TheKiln} timer stopped!");
 
                         RunSaveManager.currentRun[Segment.TheKiln] = splitsManagerInstance.splitTimers[Segment.TheKiln].totalTime;
                         RunSaveManager.SaveRun();
                     }
-                    
+
+                    Logger.LogInfo("MountainProgressHandler.TriggerReached Postfix successfully completed!");
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in MountainProgressHandler TriggerReached patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in MountainProgressHandler.TriggerReached patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }
@@ -337,6 +383,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                Logger.LogInfo($"Starting EndScreen.GetTimeString postfix!");
+
                 bool hasWon = Character.localCharacter.refs.stats.won || Character.localCharacter.refs.stats.somebodyElseWon;
                 if (hasWon && RunSaveManager.IsRunActive())
                 {
@@ -347,13 +395,18 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 }
                 else if (RunSaveManager.IsRunActive() && alwaysSave)
                 {
+                    Logger.LogInfo($"Saving run due to debug variable \"alwaysSave\" being set to true...");
+
                     RunSaveManager.currentRun.finalTime = totalSeconds;
                     RunSaveManager.currentRun.runFinished = false;
                 }
                 RunSaveManager.FinishRun();
+                Logger.LogInfo($"Run finished...");
 
                 if (SettingsManager.canEditEndScreenTime)
                 {
+                    Logger.LogInfo($"Editting end screen...");
+
                     __result += $"." + $"{Mathf.FloorToInt(SettingsManager.precisionInTimer * (totalSeconds % 1f))}".PadLeft((int)SettingsManager.precisionInTimer, '0');
                     if (SettingsManager.isRealTime) __result = TimerComponent.GetTimeString(splitsManagerInstance.mainTimer.totalTime, true, true, SettingsManager.precisionInTimer);
                     __instance.endTime.fontSizeMax = __instance.endTime.fontSize;
@@ -362,12 +415,14 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     textTransform.sizeDelta = new Vector2(-22f, textTransform.sizeDelta.y);
                     textTransform.pivot = Vector2.one;
                     textTransform.anchoredPosition = new Vector2(-9f, textTransform.anchoredPosition.y);
+                    Logger.LogInfo($"Editted time string text and object!");
 
                     float? currPaceNullable = splitsManagerInstance.mainTimer.currPace;
                     float currPace;
                     if (hasWon && SettingsManager.paceTextEnabled && currPaceNullable != null && (!SettingsManager.onlyShowFinalRunPaceIfRecord || (float)currPaceNullable <= 0.0f))
                     {
                         currPace = (float)currPaceNullable;
+                        Logger.LogInfo($"Adding pace text to end screen...");
 
                         RectTransform newPaceTextObject = UnityEngine.Object.Instantiate(textTransform, textTransform.parent);
                         newPaceTextObject.sizeDelta += new Vector2(-40f, 0f);
@@ -384,12 +439,16 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         }
 
                         textTransform.anchoredPosition += new Vector2(0f, -2f);
+
+                        Logger.LogInfo($"Pace text added!");
                     }
                 }
+
+                Logger.LogInfo("EndScreen.GetTimeString Postfix successfully completed!");
             }
             catch (Exception ex)
             {
-                Logger.LogError((object)($"Error in EndScreen GetTimeString patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+                Logger.LogError((object)($"Error in EndScreen.GetTimeString patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }

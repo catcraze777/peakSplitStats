@@ -345,23 +345,38 @@ public class TimerComponent : InfoComponent
             if (timerOn) SetCurrColor(activeColor);
         }
 
-        if (tmpTextPace != null && tmpText != null && targetRunTime > 0.0f) 
+        if (tmpTextPace != null && tmpText != null && targetRunTime > 0.0f)
         {
+            // Calculate the pace time to display.
             float currRunTime = time + (startTime - runStartTime);
             float currRunPace = currRunTime - targetRunTime;
-            if (!GetPaceTextActive() && SettingsManager.showPaceOnTimeTrigger && currRunPace >= SettingsManager.paceTimeTrigger && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
+            if (SettingsManager.useAverageRun) currRunPace = time - recordTime;
 
             tmpTextPace.text = GetTimeString(currRunPace, false, false, precisionDigits > 0 ? 1 : 0, true);
+
+            // Display the pace text if the pace trigger is enabled and reached.
+            if (!GetPaceTextActive() && SettingsManager.showPaceOnTimeTrigger && currRunPace >= SettingsManager.paceTimeTrigger && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
+
+            // Reposition the pace text if it's too far from where we'd like it to be.
             float textWidth = tmpText.GetPreferredValues().x;
             float currPaceTextPosition = tmpTextPace.transform.localPosition.x;
             float distanceAwayFromPreferedLocation = currPaceTextPosition - textWidth - minimumPaceTextOffset;
-            int direction = uiPosition == UIComponentPosition.TopLeft ? 1 : -1;
+            int direction = (uiPosition == UIComponentPosition.TopLeft) ? 1 : -1;
             if (Math.Abs(distanceAwayFromPreferedLocation) > triggerPaceTextOffsetAdjustment) tmpTextPace.transform.localPosition = new Vector3(direction * (textWidth + minimumPaceTextOffset), -6.0f, 0.0f);
 
+            // Set the color of the pace text.
             if (!SettingsManager.useColorPace) tmpTextPace.color = tmpText.color;
-            else if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = goldSplitColor;
-            else if (currRunPace <= 0.0f) tmpTextPace.color = greenSplitColor;
-            else tmpTextPace.color = redSplitColor;
+            else if (SettingsManager.useAverageRun)
+            {
+                if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = greenSplitColor;
+                else tmpTextPace.color = redSplitColor;
+            }
+            else
+            {
+                if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = goldSplitColor;
+                else if (currRunPace <= 0.0f) tmpTextPace.color = greenSplitColor;
+                else tmpTextPace.color = redSplitColor;
+            }
         }
     }
 
@@ -393,13 +408,13 @@ public class TimerComponent : InfoComponent
 
     /// <summary>
     /// Start this timer at the current time.
-    /// Equivalent to <c>StartAtTime( GetCurrentTime() );</c>
+    /// Equivalent to <c>StartTimerAtTime( GetCurrentTime() );</c>
     /// </summary>
     /// <returns> A boolean indicating if the timer was successfully started.
     /// If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
     public bool StartTimer()
     {
-        return StartAtTime(GetCurrentTime());
+        return StartTimerAtTime(GetCurrentTime());
     }
 
     /// <summary>
@@ -409,7 +424,7 @@ public class TimerComponent : InfoComponent
     /// If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
     public bool StartRunAtTime(float startingTime)
     {
-        if (StartAtTime(startingTime))
+        if (StartTimerAtTime(startingTime))
         {
             runStartTime = startingTime;
             return true;
@@ -423,7 +438,7 @@ public class TimerComponent : InfoComponent
     /// <param name="startingTime"> The time to store as the starting time. </param>
     /// <returns> A boolean indicating if the timer was successfully modified.
     /// If the timer is already running then this returns false and has no affect on the timer and it's data.</returns>
-    public bool StartAtTime(float startingTime)
+    public bool StartTimerAtTime(float startingTime)
     {
         if (timerOn) return false;
         neverStarted = false;
@@ -442,7 +457,7 @@ public class TimerComponent : InfoComponent
     /// If the timer is already stopped then this returns false and has no affect on the timer and it's data.</returns>
     public bool EndTimer() 
     {
-        return EndAtTime(GetCurrentTime());
+        return EndTimerAtTime(GetCurrentTime());
     }
 
     /// <summary>
@@ -451,7 +466,7 @@ public class TimerComponent : InfoComponent
     /// <param name="endingTime"> The time to store as the ending time. </param>
     /// <returns> A boolean indicating if the timer was successfully stopped.
     /// If the timer is already stopped then this returns false and has no affect on the timer and it's data.</returns>
-    public bool EndAtTime(float endingTime)
+    public bool EndTimerAtTime(float endingTime)
     {
         if (!timerOn) return false;
         endTime = endingTime;
