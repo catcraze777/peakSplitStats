@@ -16,11 +16,12 @@ public class InfoComponentTemplate
     public UIComponentPosition position = UIComponentPosition.TopRight;
     public int priority = 0;
     public Color color;
+    public bool isHidden;
 
     private static Color defaultColor = new Color(0.9f, 0.9f, 0.9f);
     private string DefaultNullOutput() => null;
 
-    public InfoComponentTemplate(string name, Func<string> TextToDisplay = null, Sprite icon = null, float initialFontSize = SplitsManager.HEIGHT_STAT_FONT_SIZE, UIComponentPosition position = UIComponentPosition.TopRight, Color? color = null, int priority = 0)
+    public InfoComponentTemplate(string name, Func<string> TextToDisplay = null, Sprite icon = null, float initialFontSize = SplitsManager.HEIGHT_STAT_FONT_SIZE, UIComponentPosition position = UIComponentPosition.TopRight, Color? color = null, bool isHidden = false, int priority = 0)
     {
         this.name = name;
         this.TextToDisplay = TextToDisplay ?? DefaultNullOutput;
@@ -28,6 +29,7 @@ public class InfoComponentTemplate
         this.initialFontSize = initialFontSize;
         this.position = position;
         this.color = (color != null) ? (Color)color : defaultColor;
+        this.isHidden = isHidden;
         this.priority = priority;
     }
 
@@ -39,6 +41,7 @@ public class InfoComponentTemplate
         this.initialFontSize = original.initialFontSize;
         this.position = original.position;
         this.color = original.color;
+        this.isHidden = original.isHidden;
         this.priority = original.priority;
     }
 }
@@ -229,6 +232,7 @@ public class InfoComponent : BaseUIComponent
         tmpText.outlineColor = new Color32((byte)0, (byte)0, (byte)0, byte.MaxValue);
         tmpText.outlineWidth = 0f; //0.055f;
         tmpText.color = currColor;
+        IsHidden = template?.isHidden ?? false;
     }
 
     /// <summary>

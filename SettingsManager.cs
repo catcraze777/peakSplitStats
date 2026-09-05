@@ -21,6 +21,9 @@ public class SettingsManager
 
     public static ConfigEntry<bool> segmentTimersEnabledConfig;
     public static bool segmentTimersEnabled { get { return segmentTimersEnabledConfig?.Value ?? true; } private set { if (segmentTimersEnabledConfig != null) segmentTimersEnabledConfig.Value = value; } }
+    
+    public static ConfigEntry<bool> hiddenSegmentsConfig;
+    public static bool hiddenSegments { get { return hiddenSegmentsConfig?.Value ?? false; } private set { if (hiddenSegmentsConfig != null) hiddenSegmentsConfig.Value = value; } }
 
     public static ConfigEntry<bool> timersEnabledConfig;
     public static bool timersEnabled { get { return timersEnabledConfig?.Value ?? true; } private set { if (timersEnabledConfig != null) timersEnabledConfig.Value = value; } }
@@ -41,6 +44,9 @@ public class SettingsManager
 
     public static ConfigEntry<bool> enablePaceConfig;
     public static bool enablePace { get { return enablePaceConfig?.Value ?? true; } private set { if (enablePaceConfig != null) enablePaceConfig.Value = value; } }
+
+    public static ConfigEntry<bool> disablePaceCustomRunsConfig;
+    public static bool disablePaceCustomRuns { get { return disablePaceCustomRunsConfig?.Value ?? true; } private set { if (disablePaceCustomRunsConfig != null) disablePaceCustomRunsConfig.Value = value; } }
 
     public static ConfigEntry<bool> useAverageRunConfig;
     public static bool useAverageRun { get { return useAverageRunConfig?.Value ?? false; } private set { if (useAverageRunConfig != null) useAverageRunConfig.Value = value; } }
@@ -64,7 +70,7 @@ public class SettingsManager
     public static ConfigEntry<bool> showRunPaceConfig;
     public static bool showRunPace { get { return showRunPaceConfig?.Value ?? false; } private set { if (showRunPaceConfig != null) showRunPaceConfig.Value = value; } }
 
-    public static bool paceTextEnabled { get { return enablePace && (showRunPace || showPaceOnEnd || showPaceOnTimeTrigger || showPaceNearGoals || showPaceOnStart); } }
+    public static bool paceTextEnabled { get { return enablePace && (!RunSettings.IsCustomRun || !disablePaceCustomRuns) && (showRunPace || showPaceOnEnd || showPaceOnTimeTrigger || showPaceNearGoals || showPaceOnStart); } }
 
 
 
@@ -88,9 +94,13 @@ public class SettingsManager
 
     public static ConfigEntry<bool> categorizeBySeedConfig;
     public static bool categorizeBySeed { get { return categorizeBySeedConfig?.Value ?? false; } private set { if (categorizeBySeedConfig != null) categorizeBySeedConfig.Value = value; } }
-    public static bool isCategorized { get { return categorizeByLevel || categorizeByGameVersion || categorizeByAscent || categorizeByPlayerCount || categorizeByTerrainRandomizer || categorizeBySeed; } }
 
-    public static bool hasVisibleCategoryLabel { get { return Ascents.currentAscent != 0 || (showCurrentCategory && (categorizeByPlayerCount || categorizeByLevel || (categorizeByTerrainRandomizer && RunSaveManager.currentRun.wasRandomized))); } }
+    public static ConfigEntry<bool> categorizeByCustomRunConfig;
+    public static bool categorizeByCustomRun { get { return categorizeByCustomRunConfig?.Value ?? true; } private set { if (categorizeByCustomRunConfig != null) categorizeByCustomRunConfig.Value = value; } }
+
+    public static bool isCategorized { get { return categorizeByLevel || categorizeByGameVersion || categorizeByAscent || categorizeByPlayerCount || categorizeByTerrainRandomizer || categorizeBySeed || categorizeByCustomRun; } }
+
+    public static bool hasVisibleCategoryLabel { get { return Ascents.currentAscent != 0 || (showCurrentCategory && (categorizeByPlayerCount || categorizeByLevel || categorizeByCustomRun || (categorizeByTerrainRandomizer && RunSaveManager.currentRun.wasRandomized))); } }
 
 
 
@@ -146,6 +156,7 @@ public class SettingsManager
         
         timersEnabledConfig = config.Bind("1. General", "Enable Timer", timersEnabled, "Show the main speedrunning timer.");
         segmentTimersEnabledConfig = config.Bind("1. General", "Show Segment Timers", segmentTimersEnabled, "Show the times for individual biome segments.");
+        hiddenSegmentsConfig = config.Bind("1. General", "Hidden Segments", hiddenSegments, "If true, segment timers are hidden from displaying until their corresponding timer begins as the run progresses.");
         isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
         showCurrentAttemptNumberConfig = config.Bind("1. General", "Show Current Attempt Number", showCurrentAttemptNumber, "Show the player's current run attempt number. This number is based on the number of saved runs that fit the categorization settings. Will never show if the run cannot be saved due to a custom or loaded run.");
@@ -153,11 +164,12 @@ public class SettingsManager
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
 
         enablePaceConfig = config.Bind("2. Run Pace/Intervals", "Enable Pace/Intervals", enablePace, "Display how far ahead or behind you are from your best record next to each timer. The record used for pacing is based on the categorization settings.");
-        useAverageRunConfig = config.Bind("2. Run Pace/Intervals", "Display Average Pace", useAverageRun, "Set to true to display your average times instead of the record time.");
+        disablePaceCustomRunsConfig = config.Bind("2. Run Pace/Intervals", "Disable Pace/Intervals for Custom Runs", disablePaceCustomRuns, "Set to true to hide the pace/interval during custom runs and miniruns.");
+        useAverageRunConfig = config.Bind("2. Run Pace/Intervals", "Display Average Pace", useAverageRun, "Set to true to display your average times instead of the record time. Gold splits now display personal bests.");
         showPaceOnStartConfig = config.Bind("2. Run Pace/Intervals", "Show On Timer/Segment Start", showPaceOnStart, "Show the current run pace/interval as soon as the timer starts.");
-        paceTriggerDistanceConfig = config.Bind("2. Run Pace/Intervals", "Show When Near End", paceTriggerDistance, "Trigger distance for when the player nears the next campfire/key point. The full run pace/interval displays when reaching the Peak. Set to less than 5.0 to disable.");
-        paceTimeTriggerConfig = config.Bind("2. Run Pace/Intervals", "Show At Specific Time", paceTimeTrigger, "Show the pace/interval when it reaches the specified time (in seconds). The full run pace/interval displays when reaching the Peak. Set to more than 3600.0 (one hour) to disable.");
         showPaceOnEndConfig = config.Bind("2. Run Pace/Intervals", "Show On Segment Ends", showPaceOnEnd, "Show the pace/intervals when each segment time is ended.");
+        paceTriggerDistanceConfig = config.Bind("2. Run Pace/Intervals", "Show When Near End", paceTriggerDistance, "Trigger distance for when the player nears the next campfire/key point. The full run pace/interval displays when reaching the Peak. Set to less than 5.0 to disable.");
+        paceTimeTriggerConfig = config.Bind("2. Run Pace/Intervals", "Show At Specific Time", paceTimeTrigger, "Show the pace/interval when it reaches the specified time (in seconds). For example, set this to -60.0 if you'd like the pace timer to display when the current segment's pace reaches -1:00.0 from personal best. The full run pace/interval displays when reaching the Peak. Set to more than 3600.0 (one hour) to disable.");
         showRunPaceConfig = config.Bind("2. Run Pace/Intervals", "Always Show Run Pace/Interval", showRunPace, "Always show the pace of the entire run.");
 
         showCurrentCategoryConfig = config.Bind("3. Categorizing", "Show Current Category", showCurrentCategory, "Edit the ascent text to also display the current category based on categorization settings.");
@@ -167,6 +179,7 @@ public class SettingsManager
         categorizeByGameVersionConfig = config.Bind("3. Categorizing", "By Game Version", categorizeByGameVersion, "Separate runs between game versions/updates.");
         categorizeByTerrainRandomizerConfig = config.Bind("3. Categorizing", "By Terrain Randomiser", categorizeByTerrainRandomizer, "Separate runs depending on if the Terrain Randomiser mod is used.");
         categorizeBySeedConfig = config.Bind("3. Categorizing", "By Seed", categorizeBySeed, "Separate runs by seed number if the Terrain Randomiser mod is used.");
+        categorizeByCustomRunConfig = config.Bind("3. Categorizing", "By Custom Run", categorizeByCustomRun, "Separate custom runs and miniruns from normal ascents.");
 
         timerHorizontalOffsetConfig = config.Bind("4. Misc", "Timer Horizontal Offset", timerHorizontalOffset, "Adjust the timers' positions in the top left horizontally.");
         timerVerticalOffsetConfig = config.Bind("4. Misc", "Timer Vertical Offset", timerVerticalOffset, "Adjust the timers' positions in the top left vertically.");

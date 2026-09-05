@@ -37,11 +37,11 @@ public class SplitsManager : MonoBehaviour
         {
             case UIComponentPosition.TopLeft:
                 topLeftComponents.Add(input);
-                input.transform.parent = topLeftInfoObject;
+                input.transform.SetParent(topLeftInfoObject);
                 break;
             case UIComponentPosition.TopRight:
                 topRightComponents.Add(input);
-                input.transform.parent = topRightInfoObject;
+                input.transform.SetParent(topRightInfoObject);
                 break;
             default:
                 throw new NotSupportedException($"Alignment of value {input.uiPosition} not supported!");
@@ -117,19 +117,23 @@ public class SplitsManager : MonoBehaviour
 
         SplitsStatsPlugin.Logger.LogInfo($"Loading run targets...");
 
-        if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null)    mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime;
+        if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null) 
+        {
+            mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime; 
+            mainTimer.recordTime = SettingsManager.useAverageRun ? RunSaveManager.fastestRun.finalTime : RunSaveManager.SumOfBest;
+        }
 
-        if (RunSaveManager.targetRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime =   RunSaveManager.targetRun.shoreTime;
-        if (RunSaveManager.targetRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.targetRun.tropicsTime + splitTimers[Segment.Beach].targetRunTime;
-        if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime =  RunSaveManager.targetRun.alpmesaTime + splitTimers[Segment.Tropics].targetRunTime;
-        if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + splitTimers[Segment.Alpine].targetRunTime;
-        if (RunSaveManager.targetRun.kilnTime > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].targetRunTime = RunSaveManager.targetRun.kilnTime + splitTimers[Segment.Caldera].targetRunTime;
+        if (RunSaveManager.targetRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime   = RunSaveManager.targetRun.shoreTime;
+        if (RunSaveManager.targetRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.targetRun.tropicsTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Beach].targetRunTime);
+        if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime  = RunSaveManager.targetRun.alpmesaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Tropics].targetRunTime);
+        if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Alpine].targetRunTime);
+        if (RunSaveManager.targetRun.kilnTime > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].targetRunTime = RunSaveManager.targetRun.kilnTime    + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Caldera].targetRunTime);
 
-        if (RunSaveManager.targetShore > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].recordTime =   RunSaveManager.targetShore;
-        if (RunSaveManager.targetTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.targetTropics;
-        if (RunSaveManager.targetAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime =  RunSaveManager.targetAlpmesa;
-        if (RunSaveManager.targetCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.targetCaldera;
-        if (RunSaveManager.targetKiln > 0.0f && splitTimers.ContainsKey(Segment.TheKiln)) splitTimers[Segment.TheKiln].recordTime = RunSaveManager.targetKiln;
+        if (RunSaveManager.fastestShore > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].recordTime   = RunSaveManager.fastestShore;
+        if (RunSaveManager.fastestTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.fastestTropics;
+        if (RunSaveManager.fastestAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime  = RunSaveManager.fastestAlpmesa;
+        if (RunSaveManager.fastestCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.fastestCaldera;
+        if (RunSaveManager.fastestKiln > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].recordTime = RunSaveManager.fastestKiln;
         
         SplitsStatsPlugin.Logger.LogInfo($"Loaded run targets!");
     }
@@ -175,10 +179,11 @@ public class SplitsManager : MonoBehaviour
     /// </summary>
     public void SetupManager(GUIManager guiManager, List<InfoComponentTemplate> componentList = null)
     {
-        isSetup = true;
         SplitsStatsPlugin.Logger.LogInfo($"Creating SplitsManager GameObject...");
         topLeftComponents = new BaseUIComponentList();
         topRightComponents = new BaseUIComponentList();
+        _flagPolePosition = Vector3.zero;
+        campfirePositions = new Dictionary<Segment, Vector3>();
 
         // Find Ascent UI to duplicate.
         SplitsManager.ascentUIObject = guiManager.GetComponentInChildren<AscentUI>().gameObject;
@@ -243,7 +248,7 @@ public class SplitsManager : MonoBehaviour
             mainTimer = CreateTimerComponent(mainTimerTemplate, false);
             mainTimer.SetInactiveColor(new Color(0.7f, 0.7f, 0.7f));
             mainTimer.SetPaceTextActive(false);
-            mainTimer.transform.parent = topLeftInfoObject;
+            mainTimer.transform.SetParent(topLeftInfoObject);
         }
 
         // Helper function to add generic info components to the screen based on their configured position.
@@ -306,7 +311,10 @@ public class SplitsManager : MonoBehaviour
                 SplitsStatsPlugin.Logger.LogInfo($"Creating {currSegment} Timer...");
 
                 // Create the timer.
-                InfoComponentTemplate splitTimerTemplate = new($"{currSegment} Split Timer", icon: SplitsStatsPlugin.LoadSprite(splitImgPaths[currSegment]), initialFontSize: INACTIVE_FONT_SIZE, position: UIComponentPosition.TopLeft, priority: 10 * ((int)currSegment + 1));
+                InfoComponentTemplate splitTimerTemplate = new($"{currSegment} Split Timer", icon: SplitsStatsPlugin.LoadSprite(splitImgPaths[currSegment]),
+                                                                    initialFontSize: INACTIVE_FONT_SIZE, position: UIComponentPosition.TopLeft,
+                                                                    isHidden: SettingsManager.hiddenSegments, priority: 10 * ((int)currSegment + 1));
+                
                 splitTimers[currSegment] = CreateTimerComponent(splitTimerTemplate);
 
                 splitTimers[currSegment].precisionDigits = SettingsManager.precisionInTimer;
@@ -338,6 +346,8 @@ public class SplitsManager : MonoBehaviour
 
         Instance = this;
         SplitsStatsPlugin.Logger.LogInfo($"Finished creating SplitsManager object!");
+
+        isSetup = true;
     }
 
     public static void SetAlignment(RectTransform currObject, UIComponentPosition position)
@@ -388,10 +398,16 @@ public class SplitsManager : MonoBehaviour
     /// </summary>
     public void UpdateTimerPositions()
     {
-        setupCheck();
+        try
+        {
+            setupCheck();
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
 
         float currentYPos = 0f;
-        float currFontSize;
 
         void AppendObject(RectTransform currObject, float objectHeight)
         {
@@ -406,8 +422,15 @@ public class SplitsManager : MonoBehaviour
         void AppendInfo(RectTransform currObject, BaseUIComponent currInfo)
         {
             if (currObject == null || currInfo == null) return;
-            currFontSize = currInfo.GetHeight();
-            AppendObject(currObject, currFontSize * 0.83f);
+            if (currInfo.IsHidden)
+            {
+                currObject.anchoredPosition = new Vector2(0.0f, 100_000.0f);
+            }
+            else
+            {
+                float currFontSize = currInfo.GetHeight();
+                AppendObject(currObject, currFontSize * 0.83f);
+            }
         }
 
         void AppendFromList(BaseUIComponentList list)
@@ -498,7 +521,9 @@ public class SplitsManager : MonoBehaviour
     }
     private static Vector3 _flagPolePosition = Vector3.zero;
 
-    public static void FindFlagPole()
+    public static Dictionary<Segment, Vector3> campfirePositions = new Dictionary<Segment, Vector3>();
+
+    public static Vector3 FindFlagPole()
     {
         SplitsStatsPlugin.Logger.LogInfo($"Attempting to find flag pole...");
 
@@ -509,10 +534,24 @@ public class SplitsManager : MonoBehaviour
             {
                 SplitsStatsPlugin.Logger.LogInfo($"Flag pole found!");
                 _flagPolePosition = child.position;
-                return;
+                return _flagPolePosition;
             }
         }
         SplitsStatsPlugin.Logger.LogWarning($"Couldn't find flag pole!");
+        return _flagPolePosition;
+    }
+
+    public static Vector3 FindCampfire(Segment targetSegment)
+    {
+        MapHandler.MapSegment currMapSegment = currMapHandler.segments[(int)targetSegment];
+        Transform currCampfire = currMapSegment?.segmentCampfire?.GetComponentInChildren<Campfire>()?.transform;
+
+        if (currCampfire != null)
+        {
+            campfirePositions[targetSegment] = currCampfire.position;
+            return campfirePositions[targetSegment];
+        }
+        return campfirePositions.ContainsKey(targetSegment) ? campfirePositions[targetSegment] : Vector3.zero;
     }
 
 
@@ -532,10 +571,7 @@ public class SplitsManager : MonoBehaviour
             }
             if (currSegment == Segment.TheKiln) return FlagPolePosition;
 
-            MapHandler.MapSegment currMapSegment = currMapHandler.segments[(int)currSegment];
-            Transform currCampfire = currMapSegment?.segmentCampfire?.GetComponentInChildren<Campfire>()?.transform;
-
-            if (currCampfire != null) return currCampfire.position;
+            return campfirePositions.ContainsKey(currSegment) ? campfirePositions[currSegment] : FindCampfire(currSegment);
         }
         return Vector3.zero;
     }
@@ -646,5 +682,31 @@ public class SplitsManager : MonoBehaviour
         setupCheck();
         if (splitTimers?.ContainsKey(targetSegment) != true) return -1.0f;
         return splitTimers[targetSegment].GetHeight();
+    }
+
+    /// <summary>
+    /// Set the hidden state for a specific segment's timer.
+    /// </summary>
+    /// <param name="targetSegment"> The target segment of the timer to change font size. </param>
+    /// <param name="isHidden"> The new hidden state to set. </param>
+    /// <returns> A boolean indicating if the timer was successfully modified. </returns>
+    public bool SetTimerHidden(Segment targetSegment, bool isHidden)
+    {
+        setupCheck();
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
+        splitTimers[targetSegment].IsHidden = isHidden;
+        return true;
+    }
+
+    /// <summary>
+    /// Get the hidden state for a specific segment's timer.
+    /// </summary>
+    /// <param name="targetSegment"> The target segment of the timer to get font size from. </param>
+    /// <returns> Returns the target segment's hidden status, or null if the timer was not found. </returns>
+    public bool? GetTimerHidden(Segment targetSegment)
+    {
+        setupCheck();
+        if (splitTimers?.ContainsKey(targetSegment) != true) return null;
+        return splitTimers[targetSegment].IsHidden;
     }
 }

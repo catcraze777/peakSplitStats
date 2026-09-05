@@ -19,6 +19,24 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     /// </summary>
     public RectTransform rectTransform => GetRectTransform();
 
+    private bool _hidden;
+
+    /// <summary>
+    /// Set to true to hide the UI object from being rendered.
+    /// </summary>
+    public virtual bool IsHidden
+    {
+        get
+        {
+            return this._hidden;
+        }
+        set
+        {
+            this._hidden = value;
+            SplitsManager.Instance?.UpdateTimerPositions();
+        }
+    }
+
     /// <summary>
     /// A default height for the internal scale of UI elements. The component's gameObject is scaled to change the vertical height of the element.
     /// </summary>
@@ -43,13 +61,14 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     {
         GameObject baseObject = new GameObject(name, typeof(RectTransform), typeof(T));
         T currComponent = baseObject.GetComponent<T>();
-        if (parent != null) baseObject.transform.parent = parent;
+        if (parent != null) baseObject.transform.SetParent(parent);
 
         return currComponent;
     }
     public BaseUIComponent()
     {
         uiPosition = UIComponentPosition.TopRight;
+        IsHidden = false;
         _priority = 0;
     }
 
@@ -78,6 +97,24 @@ public abstract class BaseUIComponent : MonoBehaviour, IComparable<BaseUICompone
     public virtual float GetHeight()
     {
         return this.transform.localScale.y * INITIAL_HEIGHT;
+    }
+
+    /// <summary>
+    /// Returns true if the UI object is currently hidden.
+    /// </summary>
+    /// <returns> Whether the current object is hidden. </returns>
+    public virtual bool GetHidden()
+    {
+        return IsHidden;
+    }
+
+    /// <summary>
+    /// Set whether or not the UI object is currently hidden.
+    /// </summary>
+    /// <param name="isHidden"> New hidden value. </param>
+    public virtual void SetHidden(bool isHidden)
+    {
+        this.IsHidden = isHidden;
     }
 
     /// <summary>

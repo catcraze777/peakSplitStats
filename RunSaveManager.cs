@@ -33,6 +33,18 @@ public class RunSaveManager
     public static float averageKiln { get; private set; }
 
     public static int totalAttempts { get; private set; }
+    public static float SumOfBest
+    {
+        get
+        {
+            if (fastestShore < 0.0) return -1.0f;
+            if (fastestTropics < 0.0) return -1.0f;
+            if (fastestAlpmesa < 0.0) return -1.0f;
+            if (fastestCaldera < 0.0) return -1.0f;
+            if (fastestKiln < 0.0) return -1.0f;
+            return fastestShore + fastestTropics + fastestAlpmesa + fastestCaldera + fastestKiln; 
+        } 
+    }
 
     /// <summary>
     /// The run info of the current run the player is actively on.
@@ -98,9 +110,9 @@ public class RunSaveManager
             return false;
         }
 
-        if (!IsRunValid())
+        if (RunSettings.isMiniRun)
         {
-            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to save an invalid run! If you'd like to save custom runs, please enable the setting in the config file.");
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to save a minirun, which is not currently supported!");
             return false;
         }
 
@@ -188,7 +200,7 @@ public class RunSaveManager
         fastestKiln = -1.0f;
 
         averageRun = new RunTime();
-        averageRun.finalTime = 0.0f;
+        averageRun.finalTime = -1.0f;
     }
 
     /// <summary>
@@ -217,6 +229,7 @@ public class RunSaveManager
         int numCaldera = 0;
         averageKiln = 0.0f;
         int numKiln = 0;
+        averageRun.finalTime = 0.0f;
         totalAttempts = 0;
 
         foreach (RunTime run in runStorage)
@@ -287,10 +300,16 @@ public class RunSaveManager
             }
         }
 
-        if (numShores > 0) averageShore /= numShores;
+        if (numShores > 0) 
+        {
+            averageShore /= numShores;
+        }
         else averageShore = -1.0f;
 
-        if (numTropics > 0) averageTropics /= numTropics;
+        if (numTropics > 0)
+        {
+            averageTropics /= numTropics; 
+        }
         else averageTropics = -1.0f;
 
         if (numAlpmesa > 0) averageAlpmesa /= numAlpmesa;
@@ -329,11 +348,13 @@ public class RunTime
     public float alpmesaTime;
     public float calderaTime;
     public float kilnTime;
+    public float nadirTime;
 
     public string gameVersion;
     public string levelName;
     public int ascentDifficulty;
     public int playerCount;
+    public bool customRun;
 
     public bool wasRandomized;
     public int seed;
@@ -361,11 +382,13 @@ public class RunTime
         alpmesaTime = -1.0f;
         calderaTime = -1.0f;
         kilnTime = -1.0f;
+        nadirTime = -1.0f;
 
         gameVersion = "";
         levelName = "";
         ascentDifficulty = 0;
         playerCount = 0;
+        customRun = false;
 
         wasRandomized = false;
         seed = 0;
@@ -386,11 +409,13 @@ public class RunTime
         alpmesaTime = original.alpmesaTime;
         calderaTime = original.calderaTime;
         kilnTime = original.kilnTime;
+        nadirTime = original.nadirTime;
 
         gameVersion = original.gameVersion;
         levelName = original.levelName;
         ascentDifficulty = original.ascentDifficulty;
         playerCount = original.playerCount;
+        customRun = original.customRun;
 
         wasRandomized = original.wasRandomized;
         seed = original.seed;
@@ -415,7 +440,7 @@ public class RunTime
                     return kilnTime;
                 case Segment.Void:
                     SplitsStatsPlugin.Logger.LogError($"Attempted to get Void time when it's not implemented!");
-                    return -1;
+                    return -1.0f;
                 default:
                     throw new IndexOutOfRangeException();
             }
@@ -462,11 +487,13 @@ public class RunTime
         if (otherRun.alpmesaTime != this.alpmesaTime) return false;
         if (otherRun.calderaTime != this.calderaTime) return false;
         if (otherRun.kilnTime != this.kilnTime) return false;
+        if (otherRun.nadirTime != this.nadirTime) return false;
 
         if (otherRun.gameVersion != this.gameVersion) return false;
         if (otherRun.levelName != this.levelName) return false;
         if (otherRun.ascentDifficulty != this.ascentDifficulty) return false;
         if (otherRun.playerCount != this.playerCount) return false;
+        if (otherRun.customRun != this.customRun) return false;
 
         if (otherRun.wasRandomized != this.wasRandomized) return false;
         if (otherRun.seed != this.seed) return false;
@@ -498,6 +525,7 @@ public class RunTime
         currHashFloat += levelName.GetHashCode() * GetRandomFloat();
         currHashFloat += ascentDifficulty * GetRandomFloat();
         currHashFloat += playerCount * GetRandomFloat();
+        currHashFloat += customRun ? 1896.18f : 846.21f;
 
         currHashFloat += wasRandomized ? 492.6784f * seed : 38025f;
 

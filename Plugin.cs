@@ -97,6 +97,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         if (SettingsManager.categorizeByLevel && currRunTime.levelName != otherRunTime.levelName || currRunTime.wasRandomized != otherRunTime.wasRandomized) return false;
         if ((SettingsManager.categorizeByTerrainRandomizer || SettingsManager.categorizeByLevel) && currRunTime.wasRandomized != otherRunTime.wasRandomized) return false;
         if (SettingsManager.categorizeBySeed && currRunTime.seed != otherRunTime.seed) return false;
+        if (SettingsManager.categorizeByCustomRun && currRunTime.customRun != otherRunTime.customRun) return false;
         return true;
     }
 
@@ -135,8 +136,9 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     RunSaveManager.StartNewRun();
                     RunSaveManager.currentRun.playerCount = PhotonNetwork.PlayerList.Length;
                     RunSaveManager.currentRun.levelName = SceneManager.GetActiveScene().name;
-                    RunSaveManager.currentRun.gameVersion = "v" + Application.version.Substring(1);
+                    RunSaveManager.currentRun.gameVersion = "v" + Application.version;
                     RunSaveManager.currentRun.ascentDifficulty = Ascents.currentAscent;
+                    RunSaveManager.currentRun.customRun = RunSettings.IsCustomRun;
 
                     if (hasTerrainRandomiser)
                     {
@@ -171,9 +173,10 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     Logger.LogInfo("Starting RunManager.StartRun Postfix!");
 
                     float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.TimeSinceRunStarted : Time.time - RunManager.Instance.TimeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
-                    splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace);
+                    splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace && SettingsManager.paceTextEnabled);
                     splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
                     splitsManagerInstance.mainTimer.SetHeight(SplitsManager.HEADER_FONT_SIZE);
+                    splitsManagerInstance.SetTimerHidden(Segment.Beach, false);
                     splitsManagerInstance.StartTimerAtTime(Segment.Beach, startTime);
                     splitsManagerInstance.SetTimerFontSize(Segment.Beach, SplitsManager.ACTIVE_FONT_SIZE);
                     splitsManagerInstance.UpdateTimerPositions();
@@ -255,7 +258,14 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                 splitsManagerInstance.StartTimer(s);
                 if (splitsManagerInstance.splitTimers.ContainsKey(s))
+                {
+                    if (SettingsManager.hiddenSegments)
+                    {
+                        splitsManagerInstance.splitTimers[s].IsHidden = false;
+                        splitsManagerInstance.splitTimers[s].SetHeight(0.0f);
+                    }
                     animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                }
                 Logger.LogInfo($"Started {s} timer!");
 
                 splitsManagerInstance.EndTimer(s - 1);
@@ -298,7 +308,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                 if (!SettingsManager.segmentTimersEnabled)
                 {
-                    Logger.LogInfo("Segment timers disabled, GoToSegment Postfix successfully completed!");
+                    Logger.LogInfo("Segment timers disabled, RunManager.EndGame Postfix successfully completed!");
                     return;
                 }
 
