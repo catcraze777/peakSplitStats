@@ -114,25 +114,30 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                // When loading the GUI in the main game...
                 if (SceneManager.GetActiveScene().name != "Airport" && __instance != null)
                 {
                     Logger.LogInfo("Starting GUIManager.Start Postfix!");
 
                     Instance.Config.Reload();
 
+                    // Initialize the SplitsManager UI object.
                     splitsManagerInstance = SplitsManager.CreateSplitsManager(__instance, customStats);
                     foreach (BaseUIComponent currComponent in customUIComponents) splitsManagerInstance.AddInfoComponentToSide(currComponent);
 
+                    // If an unsaved run was found, finish and save it.
                     if (RunSaveManager.IsRunActive())
                     {
                         RunSaveManager.FinishRun();
                         Logger.LogInfo("Ended an active run found stored in the RunSaveManager...");
                     }
 
+                    // Initialize the UI animation helper object.
                     animManagerGameObject = new GameObject("SplitsStatsPlugin AnimationManager");
                     animManager = animManagerGameObject.AddComponent<AnimationManager>();
                     Logger.LogInfo("Created AnimationManager...");
 
+                    // Initialize current run settings.
                     RunSaveManager.StartNewRun();
                     RunSaveManager.currentRun.playerCount = PhotonNetwork.PlayerList.Length;
                     RunSaveManager.currentRun.levelName = SceneManager.GetActiveScene().name;
@@ -147,6 +152,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     }
                     Logger.LogInfo("Loaded run information...");
 
+                    // Load run records.
                     RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
                     splitsManagerInstance.SetRunTargets();
                     Logger.LogInfo("Loaded run targets...");
@@ -172,6 +178,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 {
                     Logger.LogInfo("Starting RunManager.StartRun Postfix!");
 
+                    // Start our timers at the exact same time as used by the in-game timer.
                     float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() - RunManager.Instance.TimeSinceRunStarted : Time.time - RunManager.Instance.TimeSinceRunStarted;//__instance.GetFirstTimelineInfo().time;
                     splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace && SettingsManager.paceTextEnabled);
                     splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
@@ -201,17 +208,20 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                // Add custom category text to the ascent counter.
                 if (SettingsManager.showCurrentCategory && SettingsManager.isCategorized)
                 {
                     Logger.LogInfo("Starting AscentUI.Start Postfix!");
 
                     __instance.gameObject.SetActive(true);
+
                     if (SettingsManager.categorizeByPlayerCount)
                     {
                         __instance.text.text += $"   {RunSaveManager.currentRun.playerCount} SCOUT";
                         if (RunSaveManager.currentRun.playerCount > 1) __instance.text.text += "S";
                         Logger.LogInfo("Added player count category text!");
                     }
+
                     if (SettingsManager.categorizeByLevel)
                     {
                         if (RunSaveManager.currentRun.wasRandomized)
@@ -247,16 +257,24 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 Logger.LogInfo("Starting MapHandler.GoToSegment Postfix!");
 
-                if (RunSettings.isMiniRun && s != Segment.TheKiln)
+                // Handle campfire trigger during miniruns.
+                if (RunSettings.isMiniRun)
                 {
+                    Logger.LogInfo($"Minirun detected!");
+                    if (s == Segment.TheKiln)
+                    {
+                        Logger.LogInfo($"Transitioning between halves of 4th biome, not stopping timer. MapHandler.GoToSegment Postfix successfully completed!");
+                        return;
+                    }
                     splitsManagerInstance.mainTimer.EndTimer();
                     splitsManagerInstance.UpdateTimerPositions();
+                    Logger.LogInfo($"Timer stopped. MapHandler.GoToSegment Postfix successfully completed!");
                     return;
                 }
 
                 Logger.LogInfo($"Split reached, entering {s}!");
 
-                splitsManagerInstance.StartTimer(s);
+                // Start timer for new segment
                 if (splitsManagerInstance.splitTimers.ContainsKey(s))
                 {
                     if (SettingsManager.hiddenSegments)
@@ -264,19 +282,27 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         splitsManagerInstance.splitTimers[s].IsHidden = false;
                         splitsManagerInstance.splitTimers[s].SetHeight(0.0f);
                     }
+                    if (SettingsManager.sharedBiomeIcons)
+                    {
+                        splitsManagerInstance.UpdateTimerIcon(s, false);
+                        if (s == Segment.Caldera) splitsManagerInstance.UpdateTimerIcon(Segment.TheKiln, false);
+                    }
                     animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
                 }
+                splitsManagerInstance.StartTimer(s);
                 Logger.LogInfo($"Started {s} timer!");
 
-                splitsManagerInstance.EndTimer(s - 1);
+                // End timer of the previous segment.
                 if (splitsManagerInstance.splitTimers.ContainsKey(s - 1))
                 {
                     animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s - 1], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
                     RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
                     RunSaveManager.SaveRun();
                 }
+                splitsManagerInstance.EndTimer(s - 1);
                 Logger.LogInfo($"Stopped {s - 1} timer!");
                 
+                // If transitioning to the final half of biome 4, change target icon from a campfire to the peak flag.
                 if (s == Segment.TheKiln)
                 {
                     Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
@@ -304,6 +330,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 Logger.LogInfo("Starting RunManager.EndGame Postfix!");
 
+                // Stop the main timer on game end.
                 splitsManagerInstance.mainTimer.EndTimer();
 
                 if (!SettingsManager.segmentTimersEnabled)
@@ -312,6 +339,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     return;
                 }
 
+                // Stop all segment timers on game end.
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
                     if (currSegment == Segment.Peak) break;
@@ -345,10 +373,12 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             try
             {
+                // Upon reaching the "PEAK" biome text...
                 if (progressPoint.title == "PEAK")
                 {
                     Logger.LogInfo($"Starting MountainProgressHandler.TriggerReached postfix!");
 
+                    // Stop timer for biome 4 miniruns.
                     if (RunSettings.isMiniRun)
                     {
                         Logger.LogInfo($"Peak reached, stopping timer for minirun...");
@@ -358,12 +388,14 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         return;
                     }
 
+                    // Show full time pace.
                     if (SettingsManager.showPaceNearGoals && SettingsManager.paceTextEnabled)
                     {
                         Logger.LogInfo($"Peak reached, showing main timer pace text");
                         splitsManagerInstance.mainTimer.SetPaceTextActive(true);
                     }
 
+                    // Stop the kiln segment timer.
                     if (splitsManagerInstance.splitTimers.ContainsKey(Segment.TheKiln))
                     {
                         Logger.LogInfo($"Peak reached, stopping {Segment.TheKiln} timer...");
@@ -396,27 +428,24 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 Logger.LogInfo($"Starting EndScreen.GetTimeString postfix!");
 
                 bool hasWon = Character.localCharacter.refs.stats.won || Character.localCharacter.refs.stats.somebodyElseWon;
-                if (hasWon && RunSaveManager.IsRunActive())
+                
+                // If the run was completed (regardless of death or win), save the final time as a completed run.
+                if (RunSaveManager.IsRunActive())
                 {
-                    Logger.LogInfo($"Congrats on the win!");
+                    Logger.LogInfo($"Writing final time of completed run...");
 
                     RunSaveManager.currentRun.finalTime = totalSeconds;
-                    RunSaveManager.currentRun.runFinished = true;
-                }
-                else if (RunSaveManager.IsRunActive() && alwaysSave)
-                {
-                    Logger.LogInfo($"Saving run due to debug variable \"alwaysSave\" being set to true...");
-
-                    RunSaveManager.currentRun.finalTime = totalSeconds;
-                    RunSaveManager.currentRun.runFinished = false;
+                    RunSaveManager.currentRun.runFinished = hasWon;
                 }
                 RunSaveManager.FinishRun();
                 Logger.LogInfo($"Run finished...");
 
+                // If enabled, edit the end screen's timer text.
                 if (SettingsManager.canEditEndScreenTime)
                 {
                     Logger.LogInfo($"Editting end screen...");
 
+                    // Update the original time text object.
                     __result += $"." + $"{Mathf.FloorToInt(SettingsManager.precisionInTimer * (totalSeconds % 1f))}".PadLeft((int)SettingsManager.precisionInTimer, '0');
                     if (SettingsManager.isRealTime) __result = TimerComponent.GetTimeString(splitsManagerInstance.mainTimer.totalTime, true, true, SettingsManager.precisionInTimer);
                     __instance.endTime.fontSizeMax = __instance.endTime.fontSize;
@@ -434,6 +463,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         currPace = (float)currPaceNullable;
                         Logger.LogInfo($"Adding pace text to end screen...");
 
+                        // Add the run's final pace text to the end screen.
                         RectTransform newPaceTextObject = UnityEngine.Object.Instantiate(textTransform, textTransform.parent);
                         newPaceTextObject.sizeDelta += new Vector2(-40f, 0f);
                         newPaceTextObject.anchoredPosition = new Vector2(newPaceTextObject.anchoredPosition.x, 0f);

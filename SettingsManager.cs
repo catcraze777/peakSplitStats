@@ -21,6 +21,9 @@ public class SettingsManager
 
     public static ConfigEntry<bool> segmentTimersEnabledConfig;
     public static bool segmentTimersEnabled { get { return segmentTimersEnabledConfig?.Value ?? true; } private set { if (segmentTimersEnabledConfig != null) segmentTimersEnabledConfig.Value = value; } }
+
+    public static ConfigEntry<bool> sharedBiomeIconsConfig;
+    public static bool sharedBiomeIcons { get { return sharedBiomeIconsConfig?.Value ?? false; } private set { if (sharedBiomeIconsConfig != null) sharedBiomeIconsConfig.Value = value; } }
     
     public static ConfigEntry<bool> hiddenSegmentsConfig;
     public static bool hiddenSegments { get { return hiddenSegmentsConfig?.Value ?? false; } private set { if (hiddenSegmentsConfig != null) hiddenSegmentsConfig.Value = value; } }
@@ -60,7 +63,7 @@ public class SettingsManager
     public static bool showPaceNearGoals { get { return paceTriggerDistance > MINIMUM_TRIGGER_DISTANCE; } }
 
     public static ConfigEntry<float> paceTimeTriggerConfig;
-    public static float paceTimeTrigger { get { return paceTimeTriggerConfig?.Value ?? 60f; } private set { if (paceTimeTriggerConfig != null) paceTimeTriggerConfig.Value = value; } }
+    public static float paceTimeTrigger { get { return paceTimeTriggerConfig?.Value ?? -60f; } private set { if (paceTimeTriggerConfig != null) paceTimeTriggerConfig.Value = value; } }
     public const float MAXIMUM_TRIGGER_TIME = 3600.0f;
     public static bool showPaceOnTimeTrigger { get { return paceTimeTrigger < MAXIMUM_TRIGGER_TIME; } }
 
@@ -156,6 +159,7 @@ public class SettingsManager
         
         timersEnabledConfig = config.Bind("1. General", "Enable Timer", timersEnabled, "Show the main speedrunning timer.");
         segmentTimersEnabledConfig = config.Bind("1. General", "Show Segment Timers", segmentTimersEnabled, "Show the times for individual biome segments.");
+        sharedBiomeIconsConfig = config.Bind("1. General", "Use Shared Biome Icons", sharedBiomeIcons, "Segment timers' icons initially use shared icons that don't reveal the run's selected biome until they're reached. Set to false to always display the run's biomes at the start of each run.");
         hiddenSegmentsConfig = config.Bind("1. General", "Hidden Segments", hiddenSegments, "If true, segment timers are hidden from displaying until their corresponding timer begins as the run progresses.");
         isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
@@ -163,7 +167,7 @@ public class SettingsManager
         showCurrentHeightConfig = config.Bind("1. General", "Show Current Height", showCurrentHeight, "Show the player's current height/altitude.");
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
 
-        enablePaceConfig = config.Bind("2. Run Pace/Intervals", "Enable Pace/Intervals", enablePace, "Display how far ahead or behind you are from your best record next to each timer. The record used for pacing is based on the categorization settings.");
+        enablePaceConfig = config.Bind("2. Run Pace/Intervals", "Enable Pace/Intervals", enablePace, "Display how far ahead or behind you are from your best record next to each timer. The runs used for pacing are based on the categorization settings.");
         disablePaceCustomRunsConfig = config.Bind("2. Run Pace/Intervals", "Disable Pace/Intervals for Custom Runs", disablePaceCustomRuns, "Set to true to hide the pace/interval during custom runs and miniruns.");
         useAverageRunConfig = config.Bind("2. Run Pace/Intervals", "Display Average Pace", useAverageRun, "Set to true to display your average times instead of the record time. Gold splits now display personal bests.");
         showPaceOnStartConfig = config.Bind("2. Run Pace/Intervals", "Show On Timer/Segment Start", showPaceOnStart, "Show the current run pace/interval as soon as the timer starts.");

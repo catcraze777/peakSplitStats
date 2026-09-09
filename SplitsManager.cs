@@ -49,22 +49,68 @@ public class SplitsManager : MonoBehaviour
     }
     public Dictionary<Segment, TimerComponent> splitTimers;
 
-    public static readonly Dictionary<Segment,string> splitLabels = new Dictionary<Segment,string>
+    public static readonly Dictionary<Segment,string> segmentLabels = new Dictionary<Segment,string>
     {
         {Segment.Beach,     "Shore"},
-        {Segment.Tropics,   "Tropics"},
-        {Segment.Alpine,    "Alpmesa"},
-        {Segment.Caldera,   "Caldera"},
-        {Segment.TheKiln,   "The Kiln"}
+        {Segment.Tropics,   "Biome 2"},
+        {Segment.Alpine,    "Biome 3"},
+        {Segment.Caldera,   "Biome 4-1"},
+        {Segment.TheKiln,   "Biome 4-2"}
     };
 
-    public static readonly Dictionary<Segment,Color> splitColors = new Dictionary<Segment,Color>
+    public static readonly Dictionary<Segment, Color> segmentColors = new Dictionary<Segment, Color>
     {
-        {Segment.Beach,     new Color(1.0f, 0.923f, 0.632f)},
-        {Segment.Tropics,   new Color(0.557f, 1.0f, 0.566f)},
-        {Segment.Alpine,    new Color(0.25f, 1.0f, 0.984f)},
-        {Segment.Caldera,   new Color(1.0f, 0.578f, 0.25f)},
-        {Segment.TheKiln,   new Color(1.0f, 0.344f, 0.25f)}
+        {Segment.Beach,     new Color(0.984f, 1.0f, 0.719f)},
+        {Segment.Tropics,   new Color(0.80f, 0.8f, 0.80f)},
+        {Segment.Alpine,    new Color(0.80f, 0.8f, 0.80f)},
+        {Segment.Caldera,   new Color(0.80f, 0.8f, 0.80f)},
+        {Segment.TheKiln,   new Color(0.80f, 0.8f, 0.80f)},
+        {Segment.Void,      new Color(0.716f, 0.675f, 0.758f)}
+    };
+    
+    // Nasty nested dictionary because the caldera and kiln segments share biome types, so cannot index correct color with biome type alone.
+    public static readonly Dictionary<Segment,Dictionary<Biome.BiomeType, Color>> biomeColors = new Dictionary<Segment, Dictionary<Biome.BiomeType, Color>>
+    {
+        {
+            Segment.Beach, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Shore,     new Color(0.984f, 1.0f, 0.719f)}
+            }
+        },
+        {
+            Segment.Tropics, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Tropics,   new Color(0.557f, 1.0f, 0.566f)},
+                {Biome.BiomeType.Roots,     new Color(1.0f, 0.661f, 0.557f)}
+            }
+        },
+        {
+            Segment.Alpine, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Alpine,   new Color(0.25f, 1.0f, 0.984f)},
+                {Biome.BiomeType.Mesa,     new Color(1.0f, 0.923f, 0.632f)}
+            }
+        },
+        {
+            Segment.Caldera, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Volcano,   new Color(1.0f, 0.578f, 0.25f)},
+                {Biome.BiomeType.Swamp,     new Color(0.882f, 0.539f, 1.0f)}
+            }
+        },
+        {
+            Segment.TheKiln, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Volcano,   new Color(1.0f, 0.344f, 0.25f)},
+                {Biome.BiomeType.Swamp,     new Color(0.594f, 0.539f, 1.0f)}
+            }
+        },
+        {
+            Segment.Void, new Dictionary<Biome.BiomeType, Color>
+            {
+                {Biome.BiomeType.Void,      new Color(0.716f, 0.675f, 0.758f)}
+            }
+        }
     };
 
     public const string stopwatchImgPath = "img_stopwatch.png";
@@ -76,14 +122,71 @@ public class SplitsManager : MonoBehaviour
     public const string HEIGHT_STAT_NAME = "Height Stat";
     public const string CAMPFIRE_STAT_NAME = "Campfire Stat";
 
-    public static readonly Dictionary<Segment, string> splitImgPaths = new Dictionary<Segment, string>
+    public static readonly Dictionary<Segment, string> segmentImgPaths = new Dictionary<Segment, string>
     {
         {Segment.Beach,     "img_shore.png"},
-        {Segment.Tropics,   "img_tropics.png"},
-        {Segment.Alpine,    "img_alpmesa.png"},
-        {Segment.Caldera,   "img_caldera.png"},
-        {Segment.TheKiln,   "img_kiln.png"}
+        {Segment.Tropics,   "img_biome2.png"},
+        {Segment.Alpine,    "img_biome3.png"},
+        {Segment.Caldera,   "img_biome4.png"},
+        {Segment.TheKiln,   "img_biome5.png"},
+        {Segment.Void,      "img_nadir.png"}
     };
+
+    // Nasty nested dictionary because the caldera and kiln segments share biome types, so cannot index correct image with biome type alone.
+    public static readonly Dictionary<Segment, Dictionary<Biome.BiomeType, string>> biomeImgPaths = new Dictionary<Segment, Dictionary<Biome.BiomeType, string>>
+    {
+        {
+            Segment.Beach, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Shore,     "img_shore.png"}
+            }
+        },
+        {
+            Segment.Tropics, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Tropics,   "img_tropics.png"},
+                {Biome.BiomeType.Roots,     "img_roots.png"}
+            }
+        },
+        {
+            Segment.Alpine, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Alpine,   "img_alpine.png"},
+                {Biome.BiomeType.Mesa,     "img_mesa.png"}
+            }
+        },
+        {
+            Segment.Caldera, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Volcano,   "img_caldera.png"},
+                {Biome.BiomeType.Swamp,     "img_gloom.png"}
+            }
+        },
+        {
+            Segment.TheKiln, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Volcano,   "img_kiln.png"},
+                {Biome.BiomeType.Swamp,     "img_citadel.png"}
+            }
+        },
+        {
+            Segment.Void, new Dictionary<Biome.BiomeType, string>
+            {
+                {Biome.BiomeType.Void,      "img_nadir.png"}
+            }
+        }
+    };
+
+    public static (string, Color) getSegmentBiomeImagePathAndColor(Segment inputSegment)
+    {
+        // Get the current segment's biome icon and color.
+        int segmentIdx = inputSegment >= Segment.Peak ? (int)inputSegment - 1 : (int)inputSegment;
+        Biome.BiomeType currBiomeType = MapHandler.GetBiomeForSegment(segmentIdx);
+        string currTimerImgPath  =  biomeImgPaths[inputSegment][currBiomeType];
+        Color currTimerColor     =  biomeColors[inputSegment][currBiomeType];
+
+        return (currTimerImgPath, currTimerColor);
+    }
 
     public const float INITIAL_COLOR_SCALE = 0.7f;
     public const float INACTIVE_COLOR_SCALE = 0.5f;
@@ -95,8 +198,6 @@ public class SplitsManager : MonoBehaviour
     public static float PACE_TRIGGER_DISTANCE { get { return SettingsManager.paceTriggerDistance; } }
 
     public TimerComponent mainTimer;
-
-    private static MapHandler currMapHandler;
 
     private static GameObject ascentUIObject;
 
@@ -186,6 +287,7 @@ public class SplitsManager : MonoBehaviour
         campfirePositions = new Dictionary<Segment, Vector3>();
 
         // Find Ascent UI to duplicate.
+        SplitsStatsPlugin.Logger.LogInfo($"Creating SplitsManager object anchors...");
         SplitsManager.ascentUIObject = guiManager.GetComponentInChildren<AscentUI>().gameObject;
         RectTransform ascentUITransform = SplitsManager.ascentUIObject.GetComponent<RectTransform>();
         if (SettingsManager.showCurrentCategory && SettingsManager.isCategorized) ascentUITransform.sizeDelta = new Vector2(1000f, ascentUITransform.sizeDelta.y);
@@ -310,19 +412,21 @@ public class SplitsManager : MonoBehaviour
                 if (currSegment == Segment.Peak) break;
                 SplitsStatsPlugin.Logger.LogInfo($"Creating {currSegment} Timer...");
 
+                // Get the current segment's biome icon and color.
+                (string currTimerImgPath, Color currTimerColor) = SettingsManager.sharedBiomeIcons ? (segmentImgPaths[currSegment], segmentColors[currSegment]) : getSegmentBiomeImagePathAndColor(currSegment);
+                if (!SettingsManager.useColorSegments) currTimerColor = Color.white;
+
                 // Create the timer.
-                InfoComponentTemplate splitTimerTemplate = new($"{currSegment} Split Timer", icon: SplitsStatsPlugin.LoadSprite(splitImgPaths[currSegment]),
+                InfoComponentTemplate splitTimerTemplate = new($"{currSegment} Split Timer", icon: SplitsStatsPlugin.LoadSprite(currTimerImgPath),
                                                                     initialFontSize: INACTIVE_FONT_SIZE, position: UIComponentPosition.TopLeft,
                                                                     isHidden: SettingsManager.hiddenSegments, priority: 10 * ((int)currSegment + 1));
                 
                 splitTimers[currSegment] = CreateTimerComponent(splitTimerTemplate);
 
                 splitTimers[currSegment].precisionDigits = SettingsManager.precisionInTimer;
-
-                Color segmentColor = SettingsManager.useColorSegments ? splitColors[currSegment] : Color.white;
-                splitTimers[currSegment].SetInitialColor(segmentColor * INITIAL_COLOR_SCALE);
-                splitTimers[currSegment].SetActiveColor(segmentColor);
-                splitTimers[currSegment].SetInactiveColor(segmentColor * INACTIVE_COLOR_SCALE);
+                splitTimers[currSegment].SetInitialColor(currTimerColor * INITIAL_COLOR_SCALE);
+                splitTimers[currSegment].SetActiveColor(currTimerColor);
+                splitTimers[currSegment].SetInactiveColor(currTimerColor * INACTIVE_COLOR_SCALE);
                 splitTimers[currSegment].SetPaceTextActive(false);
                 splitTimers[currSegment].SetSortingPriority(10 * ((int)currSegment + 1));
 
@@ -331,18 +435,6 @@ public class SplitsManager : MonoBehaviour
         }
 
         UpdateTimerPositions();
-
-        // Find current MapHandler
-        SplitsStatsPlugin.Logger.LogInfo($"Attempting to find MapHandler...");
-        foreach (GameObject currGameObject in SceneManager.GetActiveScene().GetRootGameObjects())
-        {
-            currMapHandler = currGameObject.GetComponentInChildren<MapHandler>();
-            if (currMapHandler != null)
-            {
-                SplitsStatsPlugin.Logger.LogInfo($"MapHandler found!");
-                break;
-            }
-        }
 
         Instance = this;
         SplitsStatsPlugin.Logger.LogInfo($"Finished creating SplitsManager object!");
@@ -463,6 +555,7 @@ public class SplitsManager : MonoBehaviour
     /// </summary>
     public void ShowPaceNearGoals()
     {
+        MapHandler currMapHandler = Singleton<MapHandler>.Instance;
         if (currMapHandler != null)
         {
             Segment currSegment = currMapHandler.GetCurrentSegment();
@@ -527,7 +620,7 @@ public class SplitsManager : MonoBehaviour
     {
         SplitsStatsPlugin.Logger.LogInfo($"Attempting to find flag pole...");
 
-        GameObject volcanoSegmentObject = currMapHandler.segments[(int)Segment.TheKiln].segmentParent.transform.parent.gameObject;
+        GameObject volcanoSegmentObject = Singleton<MapHandler>.Instance.segments[(int)Segment.TheKiln].segmentParent.transform.parent.gameObject;
         foreach (Transform child in volcanoSegmentObject.GetComponentsInChildren<Transform>())
         {
             if (child.gameObject.name == "Flag Pole")
@@ -543,7 +636,7 @@ public class SplitsManager : MonoBehaviour
 
     public static Vector3 FindCampfire(Segment targetSegment)
     {
-        MapHandler.MapSegment currMapSegment = currMapHandler.segments[(int)targetSegment];
+        MapHandler.MapSegment currMapSegment = Singleton<MapHandler>.Instance.segments[(int)targetSegment];
         Transform currCampfire = currMapSegment?.segmentCampfire?.GetComponentInChildren<Campfire>()?.transform;
 
         if (currCampfire != null)
@@ -561,6 +654,7 @@ public class SplitsManager : MonoBehaviour
     /// <returns>Position of the next objective. Returns Vector3.zero if the objective's object couldn't be found.</returns>
     public Vector3 GetNextObjectivePosition()
     {
+        MapHandler currMapHandler = Singleton<MapHandler>.Instance;
         if (currMapHandler != null)
         {
             Segment currSegment = currMapHandler.GetCurrentSegment();
@@ -708,5 +802,27 @@ public class SplitsManager : MonoBehaviour
         setupCheck();
         if (splitTimers?.ContainsKey(targetSegment) != true) return null;
         return splitTimers[targetSegment].IsHidden;
+    }
+
+    /// <summary>
+    /// Update a timer's icon to use shared or specific icons.
+    /// </summary>
+    /// <param name="targetSegment"> The target segment of the timer to update. </param>
+    /// <param name="sharedIcons"> Whether or not to use shared icons. If left null by default, it will use the configured SettingsManager.sharedBiomeIcons value.</param>
+    /// <returns> A boolean indicating if the timer was successfully modified. </returns>
+    public bool UpdateTimerIcon(Segment targetSegment, bool? sharedIcons = null)
+    {
+        bool useSharedIcons = sharedIcons ?? SettingsManager.sharedBiomeIcons;
+        if (splitTimers?.ContainsKey(targetSegment) != true) return false;
+
+        (string currTimerImgPath, Color currTimerColor) = useSharedIcons ? (segmentImgPaths[targetSegment], segmentColors[targetSegment]) : getSegmentBiomeImagePathAndColor(targetSegment);
+        if (!SettingsManager.useColorSegments) currTimerColor = Color.white;
+
+        splitTimers[targetSegment].iconImage.sprite = SplitsStatsPlugin.LoadSprite(currTimerImgPath);
+        splitTimers[targetSegment].SetInitialColor(currTimerColor * INITIAL_COLOR_SCALE);
+        splitTimers[targetSegment].SetActiveColor(currTimerColor);
+        splitTimers[targetSegment].SetInactiveColor(currTimerColor * INACTIVE_COLOR_SCALE);
+
+        return true;
     }
 }
