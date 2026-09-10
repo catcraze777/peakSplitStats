@@ -17,6 +17,7 @@ public class RunSaveManager
     public static float targetAlpmesa { get { if (SettingsManager.useAverageRun) return averageAlpmesa; else return fastestAlpmesa; } }
     public static float targetCaldera { get { if (SettingsManager.useAverageRun) return averageCaldera; else return fastestCaldera; } }
     public static float targetKiln { get { if (SettingsManager.useAverageRun) return averageKiln; else return fastestKiln; } }
+    public static float targetNadir { get { if (SettingsManager.useAverageRun) return averageNadir; else return fastestNadir; } }
 
     public static RunTime fastestRun { get; private set; }
     public static float fastestShore { get; private set; }
@@ -24,6 +25,7 @@ public class RunSaveManager
     public static float fastestAlpmesa { get; private set; }
     public static float fastestCaldera { get; private set; }
     public static float fastestKiln { get; private set; }
+    public static float fastestNadir { get; private set; }
 
     public static RunTime averageRun { get; private set; }
     public static float averageShore { get; private set; }
@@ -31,6 +33,7 @@ public class RunSaveManager
     public static float averageAlpmesa { get; private set; }
     public static float averageCaldera { get; private set; }
     public static float averageKiln { get; private set; }
+    public static float averageNadir { get; private set; }
 
     public static int totalAttempts { get; private set; }
     public static float SumOfBest
@@ -42,7 +45,11 @@ public class RunSaveManager
             if (fastestAlpmesa < 0.0) return -1.0f;
             if (fastestCaldera < 0.0) return -1.0f;
             if (fastestKiln < 0.0) return -1.0f;
-            return fastestShore + fastestTropics + fastestAlpmesa + fastestCaldera + fastestKiln; 
+
+            bool nadirRequired = targetRun != null && targetRun.ascentDifficulty >= 8;
+            if (nadirRequired && fastestNadir < 0.0) return -1.0f;
+
+            return fastestShore + fastestTropics + fastestAlpmesa + fastestCaldera + fastestKiln + (nadirRequired ? fastestNadir : 0.0f); 
         } 
     }
 
@@ -93,7 +100,7 @@ public class RunSaveManager
         }
         currentRun = new RunTime();
         currentRun.UpdateTimeString();
-        runStorage.Add(new RunTime());
+        runStorage.Add(new RunTime(currentRun));
         return currentRun;
     }
 
@@ -198,9 +205,17 @@ public class RunSaveManager
         fastestAlpmesa = -1.0f;
         fastestCaldera = -1.0f;
         fastestKiln = -1.0f;
+        fastestNadir = -1.0f;
 
         averageRun = new RunTime();
-        averageRun.finalTime = -1.0f;
+        averageShore = -1.0f;
+        averageTropics = -1.0f;
+        averageAlpmesa = -1.0f;
+        averageCaldera = -1.0f;
+        averageKiln = -1.0f;
+        averageNadir = -1.0f;
+
+        totalAttempts = 0;
     }
 
     /// <summary>
@@ -300,16 +315,10 @@ public class RunSaveManager
             }
         }
 
-        if (numShores > 0) 
-        {
-            averageShore /= numShores;
-        }
+        if (numShores > 0) averageShore /= numShores;
         else averageShore = -1.0f;
 
-        if (numTropics > 0)
-        {
-            averageTropics /= numTropics; 
-        }
+        if (numTropics > 0) averageTropics /= numTropics; 
         else averageTropics = -1.0f;
 
         if (numAlpmesa > 0) averageAlpmesa /= numAlpmesa;
@@ -439,8 +448,7 @@ public class RunTime
                 case Segment.TheKiln:
                     return kilnTime;
                 case Segment.Void:
-                    SplitsStatsPlugin.Logger.LogError($"Attempted to get Void time when it's not implemented!");
-                    return -1.0f;
+                    return nadirTime;
                 default:
                     throw new IndexOutOfRangeException();
             }
@@ -465,7 +473,7 @@ public class RunTime
                     kilnTime = value;
                     break;
                 case Segment.Void:
-                    SplitsStatsPlugin.Logger.LogError($"Attempted to set Void time when it's not implemented!");
+                    nadirTime = value;
                     break;
                 default:
                     throw new IndexOutOfRangeException();
@@ -520,6 +528,7 @@ public class RunTime
         currHashFloat += alpmesaTime * GetRandomFloat();
         currHashFloat += calderaTime * GetRandomFloat();
         currHashFloat += kilnTime * GetRandomFloat();
+        currHashFloat += nadirTime * GetRandomFloat();
 
         currHashFloat += gameVersion.GetHashCode() * GetRandomFloat();
         currHashFloat += levelName.GetHashCode() * GetRandomFloat();

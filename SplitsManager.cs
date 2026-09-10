@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using Zorro.Core;
+using Peak;
 
 namespace SplitsStats;
 
@@ -409,7 +410,7 @@ public class SplitsManager : MonoBehaviour
         {
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
             {
-                if (currSegment == Segment.Peak) break;
+                if (currSegment == Segment.Peak) continue;
                 SplitsStatsPlugin.Logger.LogInfo($"Creating {currSegment} Timer...");
 
                 // Get the current segment's biome icon and color.
@@ -421,6 +422,7 @@ public class SplitsManager : MonoBehaviour
                                                                     initialFontSize: INACTIVE_FONT_SIZE, position: UIComponentPosition.TopLeft,
                                                                     isHidden: SettingsManager.hiddenSegments, priority: 10 * ((int)currSegment + 1));
                 
+                if (currSegment == Segment.Void) splitTimerTemplate.isHidden = true;
                 splitTimers[currSegment] = CreateTimerComponent(splitTimerTemplate);
 
                 splitTimers[currSegment].precisionDigits = SettingsManager.precisionInTimer;
@@ -614,6 +616,16 @@ public class SplitsManager : MonoBehaviour
     }
     private static Vector3 _flagPolePosition = Vector3.zero;
 
+    public static Vector3 NadirGatePosition
+    {
+        get
+        {
+            if (_nadirGatePosition == Vector3.zero) FindNadirGate();
+            return _nadirGatePosition;
+        }
+    }
+    private static Vector3 _nadirGatePosition = Vector3.zero;
+
     public static Dictionary<Segment, Vector3> campfirePositions = new Dictionary<Segment, Vector3>();
 
     public static Vector3 FindFlagPole()
@@ -632,6 +644,19 @@ public class SplitsManager : MonoBehaviour
         }
         SplitsStatsPlugin.Logger.LogWarning($"Couldn't find flag pole!");
         return _flagPolePosition;
+    }
+
+    public static Vector3 FindNadirGate()
+    {
+        SplitsStatsPlugin.Logger.LogInfo($"Attempting to find nadir's peak gate...");
+
+        GameObject nadirSegmentObject = Singleton<MapHandler>.Instance.segments[(int)Segment.Void].segmentParent.transform.parent.gameObject;
+        _nadirGatePosition = nadirSegmentObject.GetComponentInChildren<PeakGatePortal>()?.transform.position ?? Vector3.zero;
+
+        if (_nadirGatePosition != Vector3.zero) SplitsStatsPlugin.Logger.LogInfo($"Nadir's peak gate found!");
+        else SplitsStatsPlugin.Logger.LogWarning($"Couldn't find nadir's peak gate!");
+
+        return _nadirGatePosition;
     }
 
     public static Vector3 FindCampfire(Segment targetSegment)
@@ -658,11 +683,7 @@ public class SplitsManager : MonoBehaviour
         if (currMapHandler != null)
         {
             Segment currSegment = currMapHandler.GetCurrentSegment();
-            if (currSegment >= Segment.Peak)
-            {
-                SplitsStatsPlugin.Logger.LogError($"Attempted to get objective position for unknown segment {currSegment}!");
-                return Vector3.zero;
-            }
+            if (currSegment == Segment.Void) return NadirGatePosition;
             if (currSegment == Segment.TheKiln) return FlagPolePosition;
 
             return campfirePositions.ContainsKey(currSegment) ? campfirePositions[currSegment] : FindCampfire(currSegment);

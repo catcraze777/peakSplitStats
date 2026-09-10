@@ -189,6 +189,12 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     splitsManagerInstance.UpdateTimerPositions();
                     Logger.LogInfo($"Started shore timer!");
 
+                    if (RunSaveManager.currentRun.ascentDifficulty >= 8 && ! SettingsManager.hiddenSegments)
+                    {
+                        Logger.LogInfo("Ascent is 8 or higher, displaying Nadir timer...");
+                        if (!splitsManagerInstance.SetTimerHidden(Segment.Void, false)) Logger.LogError("Could not display nadir timer!");
+                    }
+
                     SplitsManager.FindFlagPole();
 
                     Logger.LogInfo($"RunManager.StartRun Postfix successfully completed!");
@@ -248,8 +254,66 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
     }
 
+    private static void TransitionToSegment(Segment s)
+    {
+        // Handle campfire trigger during miniruns.
+        if (RunSettings.isMiniRun)
+        {
+            Logger.LogInfo($"Minirun detected!");
+            if (s == Segment.TheKiln)
+            {
+                Logger.LogInfo($"Transitioning between halves of 4th biome, not stopping timer. MapHandler.GoToSegment Postfix successfully completed!");
+                return;
+            }
+            splitsManagerInstance.mainTimer.EndTimer();
+            splitsManagerInstance.UpdateTimerPositions();
+            Logger.LogInfo($"Timer stopped. MapHandler.GoToSegment Postfix successfully completed!");
+            return;
+        }
+
+        Logger.LogInfo($"Split reached, entering {s}!");
+
+        // Start timer for new segment
+        if (splitsManagerInstance.splitTimers.ContainsKey(s))
+        {
+            if (SettingsManager.hiddenSegments || (s == Segment.Void))
+            {
+                splitsManagerInstance.splitTimers[s].IsHidden = false;
+                splitsManagerInstance.splitTimers[s].SetHeight(0.0f);
+            }
+            if (SettingsManager.sharedBiomeIcons && s != Segment.Void)
+            {
+                splitsManagerInstance.UpdateTimerIcon(s, false);
+                if (s == Segment.Caldera) splitsManagerInstance.UpdateTimerIcon(Segment.TheKiln, false);
+            }
+            animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+
+            splitsManagerInstance.StartTimer(s);
+            Logger.LogInfo($"Started {s} timer!");
+        }
+
+        // End timer of the previous segment.
+        if (splitsManagerInstance.splitTimers.ContainsKey(s - 1))
+        {
+            splitsManagerInstance.EndTimer(s - 1);
+            animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s - 1], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+            RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
+            RunSaveManager.SaveRun();
+            Logger.LogInfo($"Stopped {s - 1} timer!");
+        }
+        
+        // If transitioning to the final half of biome 4, change target icon from a campfire to the peak flag.
+        if (s == Segment.TheKiln)
+        {
+            Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
+            if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
+            Logger.LogInfo($"Updated campfire icon to flag!");
+        }
+        splitsManagerInstance.UpdateTimerPositions();
+    }
+
     [HarmonyPatch(typeof(MapHandler), "GoToSegment")]
-    private class MapHandlerPatcher
+    private class MapHandlerGoToSegmentPatcher
     {
         private static void Postfix(MapHandler __instance, ref Segment s)
         {
@@ -257,59 +321,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             {
                 Logger.LogInfo("Starting MapHandler.GoToSegment Postfix!");
 
-                // Handle campfire trigger during miniruns.
-                if (RunSettings.isMiniRun)
-                {
-                    Logger.LogInfo($"Minirun detected!");
-                    if (s == Segment.TheKiln)
-                    {
-                        Logger.LogInfo($"Transitioning between halves of 4th biome, not stopping timer. MapHandler.GoToSegment Postfix successfully completed!");
-                        return;
-                    }
-                    splitsManagerInstance.mainTimer.EndTimer();
-                    splitsManagerInstance.UpdateTimerPositions();
-                    Logger.LogInfo($"Timer stopped. MapHandler.GoToSegment Postfix successfully completed!");
-                    return;
-                }
-
-                Logger.LogInfo($"Split reached, entering {s}!");
-
-                // Start timer for new segment
-                if (splitsManagerInstance.splitTimers.ContainsKey(s))
-                {
-                    if (SettingsManager.hiddenSegments)
-                    {
-                        splitsManagerInstance.splitTimers[s].IsHidden = false;
-                        splitsManagerInstance.splitTimers[s].SetHeight(0.0f);
-                    }
-                    if (SettingsManager.sharedBiomeIcons)
-                    {
-                        splitsManagerInstance.UpdateTimerIcon(s, false);
-                        if (s == Segment.Caldera) splitsManagerInstance.UpdateTimerIcon(Segment.TheKiln, false);
-                    }
-                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s], SplitsManager.ACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-                }
-                splitsManagerInstance.StartTimer(s);
-                Logger.LogInfo($"Started {s} timer!");
-
-                // End timer of the previous segment.
-                if (splitsManagerInstance.splitTimers.ContainsKey(s - 1))
-                {
-                    animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s - 1], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-                    RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
-                    RunSaveManager.SaveRun();
-                }
-                splitsManagerInstance.EndTimer(s - 1);
-                Logger.LogInfo($"Stopped {s - 1} timer!");
-                
-                // If transitioning to the final half of biome 4, change target icon from a campfire to the peak flag.
-                if (s == Segment.TheKiln)
-                {
-                    Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
-                    if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
-                    Logger.LogInfo($"Updated campfire icon to flag!");
-                }
-                splitsManagerInstance.UpdateTimerPositions();
+                TransitionToSegment(s);
 
                 Logger.LogInfo($"MapHandler.GoToSegment Postfix successfully completed!");
             }
@@ -318,7 +330,39 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 Logger.LogError((object)($"Error in MapHandler.GoToSegment patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
+    }
 
+    [HarmonyPatch(typeof(MapHandler), "JumpToSegment")]
+    private class MapHandlerJumpToSegmentPatcher
+    {
+        private static void Postfix(MapHandler __instance, ref Segment segment)
+        {
+            try
+            {
+                Logger.LogInfo("Starting MapHandler.JumpToSegment Postfix!");
+
+                TransitionToSegment(segment);
+
+                // Make sure all timers are stopped.
+                foreach (Segment currSegment in new Segment[] { Segment.Beach, Segment.Tropics, Segment.Alpine, Segment.Caldera, Segment.TheKiln })
+                {
+                    if (splitsManagerInstance.splitTimers.ContainsKey(currSegment) && splitsManagerInstance.splitTimers[currSegment].timerOn)
+                    {
+                        splitsManagerInstance.EndTimer(currSegment);
+                        animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
+                        RunSaveManager.currentRun[currSegment] = splitsManagerInstance.splitTimers[currSegment].totalTime;
+                        RunSaveManager.SaveRun();
+                        Logger.LogInfo($"Stopped {currSegment} timer!");
+                    }
+                }
+
+                Logger.LogInfo($"MapHandler.JumpToSegment Postfix successfully completed!");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError((object)($"Error in MapHandler.JumpToSegment patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+            }
+        }
     }
 
     [HarmonyPatch(typeof(RunManager), "EndGame")]
@@ -342,7 +386,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 // Stop all segment timers on game end.
                 foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
                 {
-                    if (currSegment == Segment.Peak) break;
+                    if (currSegment == Segment.Peak) continue;
 
                     Logger.LogInfo($"Stopping {currSegment} timer...");
                     TimerComponent currTimer = splitsManagerInstance.splitTimers[currSegment];
@@ -353,9 +397,12 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     if (splitsManagerInstance.splitTimers.ContainsKey(currSegment))
                         animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[currSegment], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
 
+                    RunSaveManager.currentRun[currSegment] = currTimer.totalTime;
+
                     Logger.LogInfo($"Successfully stopped {currSegment} timer!");
                 }
                 splitsManagerInstance.UpdateTimerPositions();
+                RunSaveManager.SaveRun();
 
                 Logger.LogInfo("RunManager.EndGame Postfix successfully completed!");
             }
