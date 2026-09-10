@@ -132,6 +132,9 @@ public class SettingsManager
     public static ConfigEntry<bool> onlyShowFinalRunPaceIfRecordConfig;
     public static bool onlyShowFinalRunPaceIfRecord { get { return onlyShowFinalRunPaceIfRecordConfig?.Value ?? false; } private set { if (onlyShowFinalRunPaceIfRecordConfig != null) onlyShowFinalRunPaceIfRecordConfig.Value = value; } }
 
+    public static ConfigEntry<bool> alwaysShowNadirSegmentConfig;
+    public static bool alwaysShowNadirSegment { get { return alwaysShowNadirSegmentConfig?.Value ?? false; } private set { if (alwaysShowNadirSegmentConfig != null) alwaysShowNadirSegmentConfig.Value = value; } }
+
     public static ConfigEntry<int> precisionInTimerConfig;
     public static int precisionInTimer { get { return precisionInTimerConfig?.Value ?? 1; } private set { if (precisionInTimerConfig != null) precisionInTimerConfig.Value = value; } }
 
@@ -192,6 +195,7 @@ public class SettingsManager
         statsAutoAdjustConfig = config.Bind("4. Misc", "Extra Stats Automatically Adjust Position", statsAutoAdjust, "Adjust the stats' positions in the top right based on if the ascent text is active. Enabled by default but can be disabled if manually moving it's location.");
         canEditEndScreenTimeConfig = config.Bind("4. Misc", "Edit End Screen Time", canEditEndScreenTime, "Allow this mod to change the end-game results' displayed run time to add precision, show final pace from record if enabled, and show real time if enabled.");
         onlyShowFinalRunPaceIfRecordConfig = config.Bind("4. Misc", "Only Show Final Pace If Record", onlyShowFinalRunPaceIfRecord, "Only show the final pace on the end-game results if the run is a new record.");
+        alwaysShowNadirSegmentConfig = config.Bind("4. Misc", "Always Show Nadir Segment Timer", alwaysShowNadirSegment, "Enable so the nadir timer is always visible as a segment, regardless of if nadir was entered or if the run is for ascent 8.");
         precisionInTimerConfig = config.Bind("4. Misc", "Digits of Precision", precisionInTimer, "Set the number of decimal digits to display in the timers.");
         useColorSegmentsConfig = config.Bind("4. Misc", "Color Segment Timers", useColorSegments, "Color each segment to match the biome, otherwise color them white.");
         useColorPaceConfig = config.Bind("4. Misc", "Color Pace/Interval Text", useColorPace, "Color each segment's pace/interval time to match with the pace, otherwise color them white. (Use Green/Red/Gold Splits)");

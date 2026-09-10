@@ -144,6 +144,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     RunSaveManager.currentRun.gameVersion = "v" + Application.version;
                     RunSaveManager.currentRun.ascentDifficulty = Ascents.currentAscent;
                     RunSaveManager.currentRun.customRun = RunSettings.IsCustomRun;
+                    RunSaveManager.currentRun.isRealTime = SettingsManager.isRealTime;
 
                     if (hasTerrainRandomiser)
                     {
@@ -301,13 +302,19 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             RunSaveManager.SaveRun();
             Logger.LogInfo($"Stopped {s - 1} timer!");
         }
-        
+
         // If transitioning to the final half of biome 4, change target icon from a campfire to the peak flag.
         if (s == Segment.TheKiln)
         {
             Sprite newSprite = LoadSprite(SplitsManager.peakImgPath);
             if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
             Logger.LogInfo($"Updated campfire icon to flag!");
+        }
+        else if (s == Segment.Void)
+        {
+            Sprite newSprite = LoadSprite(SplitsManager.peakGateImgPath);
+            if (newSprite != null) splitsManagerInstance.ChangeCampfireIcon(newSprite);
+            Logger.LogInfo($"Updated campfire icon to peak gate!");
         }
         splitsManagerInstance.UpdateTimerPositions();
     }
@@ -481,7 +488,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 {
                     Logger.LogInfo($"Writing final time of completed run...");
 
-                    RunSaveManager.currentRun.finalTime = totalSeconds;
+                    RunSaveManager.currentRun.finalTime = SettingsManager.isRealTime ? splitsManagerInstance.mainTimer.totalTime : totalSeconds;
                     RunSaveManager.currentRun.runFinished = hasWon;
                 }
                 RunSaveManager.FinishRun();
@@ -521,8 +528,10 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                         if (SettingsManager.useColorPace)
                         {
-                            if (currPace <= 0.0f) newPaceText.color = new Color(0.323f, 0.413f, 0.308f);
-                            else newPaceText.color = new Color(0.4f, 0.208f, 0.208f);
+                            float currRecordTime = splitsManagerInstance.mainTimer.recordTime;
+                            if (currRecordTime > 0.0f && splitsManagerInstance.mainTimer.currTime < currRecordTime) newPaceText.color = TimerComponent.goldSplitColor;
+                            else if (currPace <= 0.0f) newPaceText.color = TimerComponent.greenSplitColor;
+                            else newPaceText.color = TimerComponent.redSplitColor;
                         }
 
                         textTransform.anchoredPosition += new Vector2(0f, -2f);

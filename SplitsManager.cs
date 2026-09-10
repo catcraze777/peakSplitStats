@@ -118,6 +118,7 @@ public class SplitsManager : MonoBehaviour
     public const string heightImgPath = "img_height.png";
     public const string campfireImgPath = "img_campfire.png";
     public const string peakImgPath = "img_peak.png";
+    public const string peakGateImgPath = "img_peak_gate.png";
 
     public const string ATTEMPT_STAT_NAME = "Attempt Stat";
     public const string HEIGHT_STAT_NAME = "Height Stat";
@@ -230,12 +231,14 @@ public class SplitsManager : MonoBehaviour
         if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime  = RunSaveManager.targetRun.alpmesaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Tropics].targetRunTime);
         if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Alpine].targetRunTime);
         if (RunSaveManager.targetRun.kilnTime > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].targetRunTime = RunSaveManager.targetRun.kilnTime    + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Caldera].targetRunTime);
+        if (RunSaveManager.targetRun.nadirTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Void))         splitTimers[Segment.Void].targetRunTime    = RunSaveManager.targetRun.nadirTime   + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.TheKiln].targetRunTime);
 
-        if (RunSaveManager.fastestShore > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].recordTime   = RunSaveManager.fastestShore;
+        if (RunSaveManager.fastestShore > 0.0f      && splitTimers.ContainsKey(Segment.Beach))         splitTimers[Segment.Beach].recordTime   = RunSaveManager.fastestShore;
         if (RunSaveManager.fastestTropics > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].recordTime = RunSaveManager.fastestTropics;
         if (RunSaveManager.fastestAlpmesa > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].recordTime  = RunSaveManager.fastestAlpmesa;
         if (RunSaveManager.fastestCaldera > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].recordTime = RunSaveManager.fastestCaldera;
-        if (RunSaveManager.fastestKiln > 0.0f       &&  splitTimers.ContainsKey(Segment.TheKiln))      splitTimers[Segment.TheKiln].recordTime = RunSaveManager.fastestKiln;
+        if (RunSaveManager.fastestKiln > 0.0f       && splitTimers.ContainsKey(Segment.TheKiln))       splitTimers[Segment.TheKiln].recordTime = RunSaveManager.fastestKiln;
+        if (RunSaveManager.fastestNadir > 0.0f      &&  splitTimers.ContainsKey(Segment.Void))         splitTimers[Segment.Void].recordTime    = RunSaveManager.fastestNadir;
         
         SplitsStatsPlugin.Logger.LogInfo($"Loaded run targets!");
     }
@@ -422,7 +425,7 @@ public class SplitsManager : MonoBehaviour
                                                                     initialFontSize: INACTIVE_FONT_SIZE, position: UIComponentPosition.TopLeft,
                                                                     isHidden: SettingsManager.hiddenSegments, priority: 10 * ((int)currSegment + 1));
                 
-                if (currSegment == Segment.Void) splitTimerTemplate.isHidden = true;
+                if (currSegment == Segment.Void && ! SettingsManager.alwaysShowNadirSegment) splitTimerTemplate.isHidden = true;
                 splitTimers[currSegment] = CreateTimerComponent(splitTimerTemplate);
 
                 splitTimers[currSegment].precisionDigits = SettingsManager.precisionInTimer;
@@ -650,7 +653,7 @@ public class SplitsManager : MonoBehaviour
     {
         SplitsStatsPlugin.Logger.LogInfo($"Attempting to find nadir's peak gate...");
 
-        GameObject nadirSegmentObject = Singleton<MapHandler>.Instance.segments[(int)Segment.Void].segmentParent.transform.parent.gameObject;
+        GameObject nadirSegmentObject = Singleton<MapHandler>.Instance.segments[(int)Segment.Void - 1].segmentParent.transform.parent.gameObject;
         _nadirGatePosition = nadirSegmentObject.GetComponentInChildren<PeakGatePortal>()?.transform.position ?? Vector3.zero;
 
         if (_nadirGatePosition != Vector3.zero) SplitsStatsPlugin.Logger.LogInfo($"Nadir's peak gate found!");

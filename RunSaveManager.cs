@@ -244,6 +244,8 @@ public class RunSaveManager
         int numCaldera = 0;
         averageKiln = 0.0f;
         int numKiln = 0;
+        averageNadir = 0.0f;
+        int numNadir = 0;
         averageRun.finalTime = 0.0f;
         totalAttempts = 0;
 
@@ -309,9 +311,18 @@ public class RunSaveManager
             {
                 if (fastestKiln == -1.0f || run.kilnTime < fastestKiln)
                     fastestKiln = run.kilnTime;
-                
+
                 averageKiln += run.kilnTime;
                 numKiln++;
+            }
+            
+            if (run.nadirTime > 0.0f)
+            {
+                if (fastestNadir == -1.0f || run.nadirTime < fastestNadir)
+                    fastestNadir = run.nadirTime;
+                
+                averageNadir += run.nadirTime;
+                numNadir++;
             }
         }
 
@@ -330,6 +341,9 @@ public class RunSaveManager
         if (numKiln > 0) averageKiln /= numKiln;
         else averageKiln = -1.0f;
 
+        if (numNadir > 0) averageNadir /= numNadir;
+        else averageNadir = -1.0f;
+
         if (numCompleteRuns > 0) { averageRun.finalTime /= numCompleteRuns; averageRun.runFinished = true; }
         else { averageRun.finalTime = -1.0f; averageRun.runFinished = false; }
 
@@ -338,6 +352,7 @@ public class RunSaveManager
         averageRun.alpmesaTime = averageAlpmesa;
         averageRun.calderaTime = averageCaldera;
         averageRun.kilnTime = averageKiln;
+        averageRun.nadirTime = averageNadir;
 
         if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Loaded times from {totalAttempts} record(s)!");
     }
