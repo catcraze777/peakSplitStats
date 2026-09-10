@@ -138,6 +138,9 @@ public class SettingsManager
     public static ConfigEntry<int> precisionInTimerConfig;
     public static int precisionInTimer { get { return precisionInTimerConfig?.Value ?? 1; } private set { if (precisionInTimerConfig != null) precisionInTimerConfig.Value = value; } }
 
+    public static ConfigEntry<bool> useInGameTimingConfig;
+    public static bool useInGameTiming { get { return useInGameTimingConfig?.Value ?? false; } private set { if (useInGameTimingConfig != null) useInGameTimingConfig.Value = value; } }
+
     public static ConfigEntry<bool> useColorSegmentsConfig;
     public static bool useColorSegments { get { return useColorSegmentsConfig?.Value ?? true; } private set { if (useColorSegmentsConfig != null) useColorSegmentsConfig.Value = value; } }
 
@@ -186,7 +189,7 @@ public class SettingsManager
         categorizeByGameVersionConfig = config.Bind("3. Categorizing", "By Game Version", categorizeByGameVersion, "Separate runs between game versions/updates.");
         categorizeByTerrainRandomizerConfig = config.Bind("3. Categorizing", "By Terrain Randomiser", categorizeByTerrainRandomizer, "Separate runs depending on if the Terrain Randomiser mod is used.");
         categorizeBySeedConfig = config.Bind("3. Categorizing", "By Seed", categorizeBySeed, "Separate runs by seed number if the Terrain Randomiser mod is used.");
-        categorizeByCustomRunConfig = config.Bind("3. Categorizing", "By Custom Run", categorizeByCustomRun, "Separate custom runs and miniruns from normal ascents.");
+        categorizeByCustomRunConfig = config.Bind("3. Categorizing", "By Custom Run", categorizeByCustomRun, "Separate custom runs and miniruns from normal ascents. Custom runs must have the same settings to be categorized together when displaying past records/averages.");
 
         timerHorizontalOffsetConfig = config.Bind("4. Misc", "Timer Horizontal Offset", timerHorizontalOffset, "Adjust the timers' positions in the top left horizontally.");
         timerVerticalOffsetConfig = config.Bind("4. Misc", "Timer Vertical Offset", timerVerticalOffset, "Adjust the timers' positions in the top left vertically.");
@@ -197,6 +200,7 @@ public class SettingsManager
         onlyShowFinalRunPaceIfRecordConfig = config.Bind("4. Misc", "Only Show Final Pace If Record", onlyShowFinalRunPaceIfRecord, "Only show the final pace on the end-game results if the run is a new record.");
         alwaysShowNadirSegmentConfig = config.Bind("4. Misc", "Always Show Nadir Segment Timer", alwaysShowNadirSegment, "Enable so the nadir timer is always visible as a segment, regardless of if nadir was entered or if the run is for ascent 8.");
         precisionInTimerConfig = config.Bind("4. Misc", "Digits of Precision", precisionInTimer, "Set the number of decimal digits to display in the timers.");
+        useInGameTimingConfig = config.Bind("4. Misc", "Use Vanilla Timing", useInGameTiming, "Set to true to use the timing methods of the base game. Disables the timer starting when the player opens their eyes.");
         useColorSegmentsConfig = config.Bind("4. Misc", "Color Segment Timers", useColorSegments, "Color each segment to match the biome, otherwise color them white.");
         useColorPaceConfig = config.Bind("4. Misc", "Color Pace/Interval Text", useColorPace, "Color each segment's pace/interval time to match with the pace, otherwise color them white. (Use Green/Red/Gold Splits)");
         saveEmptyRunsConfig = config.Bind("4. Misc", "Save Empty Times", saveEmptyRuns, "Allows saving runs that have no times to save (died/quit before finishing the Shore). Set to true if you'd like these runs to count for the attempts counter.");

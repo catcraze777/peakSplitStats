@@ -636,7 +636,9 @@ public class SplitsManager : MonoBehaviour
         SplitsStatsPlugin.Logger.LogInfo($"Attempting to find flag pole...");
 
         GameObject volcanoSegmentObject = Singleton<MapHandler>.Instance.segments[(int)Segment.TheKiln].segmentParent.transform.parent.gameObject;
-        foreach (Transform child in volcanoSegmentObject.GetComponentsInChildren<Transform>())
+        GameObject peakHandlerObject = volcanoSegmentObject.GetComponentInChildren<PeakHandler>()?.gameObject ?? null;
+
+        foreach (Transform child in peakHandlerObject?.GetComponentsInChildren<Transform>() ?? [])
         {
             if (child.gameObject.name == "Flag Pole")
             {
@@ -664,14 +666,20 @@ public class SplitsManager : MonoBehaviour
 
     public static Vector3 FindCampfire(Segment targetSegment)
     {
+        SplitsStatsPlugin.Logger.LogInfo($"Attempting to find {targetSegment} campfire...");
+
         MapHandler.MapSegment currMapSegment = Singleton<MapHandler>.Instance.segments[(int)targetSegment];
         Transform currCampfire = currMapSegment?.segmentCampfire?.GetComponentInChildren<Campfire>()?.transform;
 
         if (currCampfire != null)
         {
+            SplitsStatsPlugin.Logger.LogInfo($"Campfire found!");
+
             campfirePositions[targetSegment] = currCampfire.position;
             return campfirePositions[targetSegment];
         }
+
+        SplitsStatsPlugin.Logger.LogWarning($"Couldn't find the campfire!");
         return campfirePositions.ContainsKey(targetSegment) ? campfirePositions[targetSegment] : Vector3.zero;
     }
 
@@ -711,7 +719,7 @@ public class SplitsManager : MonoBehaviour
     {
         Vector3 currCharacterPos = GetLocalCharacterPosition();
         Vector3 currObjectivePos = GetNextObjectivePosition();
-        if (currCharacterPos == Vector3.zero || currObjectivePos == Vector3.zero) return null;
+        if (currCharacterPos == Vector3.zero || currObjectivePos == Vector3.zero) return "Loading...";
         return $"{(int)((currCharacterPos - currObjectivePos).magnitude * CharacterStats.unitsToMeters)}m";
     }
 

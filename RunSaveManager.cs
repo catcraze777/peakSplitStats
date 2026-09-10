@@ -117,12 +117,6 @@ public class RunSaveManager
             return false;
         }
 
-        if (RunSettings.isMiniRun)
-        {
-            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to save a minirun, which is not currently supported!");
-            return false;
-        }
-
         runStorage[^1] = new RunTime(currentRun);
 
         try
@@ -262,7 +256,7 @@ public class RunSaveManager
 
             totalAttempts++;
 
-            if (run.runFinished)
+            if (run.runFinished && run.finalTime > 0.0f)
             {
                 if (fastestRun.finalTime == -1.0f || run.finalTime < fastestRun.finalTime)
                     fastestRun = new RunTime(run);
@@ -379,6 +373,7 @@ public class RunTime
     public int ascentDifficulty;
     public int playerCount;
     public bool customRun;
+    public uint customRunSettingsHash;
 
     public bool wasRandomized;
     public int seed;
@@ -413,6 +408,7 @@ public class RunTime
         ascentDifficulty = 0;
         playerCount = 0;
         customRun = false;
+        customRunSettingsHash = 0;
 
         wasRandomized = false;
         seed = 0;
@@ -440,6 +436,7 @@ public class RunTime
         ascentDifficulty = original.ascentDifficulty;
         playerCount = original.playerCount;
         customRun = original.customRun;
+        customRunSettingsHash = original.customRunSettingsHash;
 
         wasRandomized = original.wasRandomized;
         seed = original.seed;
@@ -516,6 +513,7 @@ public class RunTime
         if (otherRun.levelName != this.levelName) return false;
         if (otherRun.ascentDifficulty != this.ascentDifficulty) return false;
         if (otherRun.playerCount != this.playerCount) return false;
+        if (otherRun.isRealTime != this.isRealTime) return false;
         if (otherRun.customRun != this.customRun) return false;
 
         if (otherRun.wasRandomized != this.wasRandomized) return false;
@@ -549,7 +547,9 @@ public class RunTime
         currHashFloat += levelName.GetHashCode() * GetRandomFloat();
         currHashFloat += ascentDifficulty * GetRandomFloat();
         currHashFloat += playerCount * GetRandomFloat();
+        currHashFloat += isRealTime ? 23493.18f : 1.483f;
         currHashFloat += customRun ? 1896.18f : 846.21f;
+        currHashFloat += customRunSettingsHash % 100_000.0f;
 
         currHashFloat += wasRandomized ? 492.6784f * seed : 38025f;
 
@@ -566,6 +566,7 @@ public class RunTime
         if (alpmesaTime > 0.0f) return true;
         if (calderaTime > 0.0f) return true;
         if (kilnTime > 0.0f) return true;
+        if (nadirTime > 0.0f) return true;
         return false;
     }
 }
