@@ -216,17 +216,41 @@ public class SplitsManager : MonoBehaviour
     /// </summary>
     public void SetRunTargets()
     {
+        if (SettingsManager.disablePaceCustomRuns && RunSaveManager.currentRun.customRun)
+        {
+            SplitsStatsPlugin.Logger.LogInfo($"Playing custom run with pace text disabled, not setting run targets.");
+            return;
+        }
+        
         setupCheck();
 
         SplitsStatsPlugin.Logger.LogInfo($"Loading run targets...");
 
-        if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null) 
+        if (RunSettings.isMiniRun && mainTimer != null)
         {
-            mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime; 
+            Segment minirunBiome = (Segment)RunSettings.GetValue(RunSettings.SETTINGTYPE.MiniRunBiome);
+            float targetTime = -1.0f;
+            float recordTime = -1.0f;
+            if (minirunBiome == Segment.Caldera)
+            {
+                targetTime = RunSaveManager.targetBiome4;
+                if (SettingsManager.useAverageRun) recordTime = RunSaveManager.fastestBiome4;
+            }
+            else
+            {
+                targetTime = RunSaveManager.targetSegment(minirunBiome);
+                if (SettingsManager.useAverageRun) recordTime = RunSaveManager.fastestSegment(minirunBiome);
+            }
+            mainTimer.targetRunTime = targetTime;
+            mainTimer.recordTime = recordTime;
+        }
+        else if (RunSaveManager.targetRun.finalTime > 0.0f && mainTimer != null)
+        {
+            mainTimer.targetRunTime = RunSaveManager.targetRun.finalTime;
             mainTimer.recordTime = SettingsManager.useAverageRun ? RunSaveManager.fastestRun.finalTime : RunSaveManager.SumOfBest;
         }
 
-        if (RunSaveManager.targetRun.shoreTime > 0.0f      &&  splitTimers.ContainsKey(Segment.Beach))        splitTimers[Segment.Beach].targetRunTime   = RunSaveManager.targetRun.shoreTime;
+        if (RunSaveManager.targetRun.shoreTime > 0.0f && splitTimers.ContainsKey(Segment.Beach)) splitTimers[Segment.Beach].targetRunTime = RunSaveManager.targetRun.shoreTime;
         if (RunSaveManager.targetRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.targetRun.tropicsTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Beach].targetRunTime);
         if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime  = RunSaveManager.targetRun.alpmesaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Tropics].targetRunTime);
         if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Alpine].targetRunTime);
@@ -409,7 +433,7 @@ public class SplitsManager : MonoBehaviour
 
         // Create a timer for each segment.
         splitTimers = new Dictionary<Segment, TimerComponent>();
-        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && !RunSettings.isMiniRun && !Peak.Quicksave.ShouldUseSaveData)
+        if (SettingsManager.segmentTimersEnabled && SettingsManager.timersEnabled && !RunSettings.isMiniRun)
         {
             foreach (Segment currSegment in Enum.GetValues(typeof(Segment)))
             {

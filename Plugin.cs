@@ -11,7 +11,7 @@ using Photon.Pun;
 using System.Reflection;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
+using Peak;
 
 namespace SplitsStats;
 
@@ -100,7 +100,9 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         if (SettingsManager.categorizeByLevel && currRunTime.levelName != otherRunTime.levelName || currRunTime.wasRandomized != otherRunTime.wasRandomized) return false;
         if ((SettingsManager.categorizeByTerrainRandomizer || SettingsManager.categorizeByLevel) && currRunTime.wasRandomized != otherRunTime.wasRandomized) return false;
         if (SettingsManager.categorizeBySeed && currRunTime.seed != otherRunTime.seed) return false;
-        if (SettingsManager.categorizeByCustomRun && (currRunTime.customRun != otherRunTime.customRun || currRunTime.customRunSettingsHash != otherRunTime.customRunSettingsHash)) return false;
+        if (SettingsManager.categorizeByCustomRun && !SettingsManager.customRunNormalPace 
+                && (currRunTime.customRun != otherRunTime.customRun || currRunTime.customRunSettingsHash != otherRunTime.customRunSettingsHash)) return false;
+        if (SettingsManager.customRunNormalPace && otherRunTime.customRun) return false;
         return true;
     }
 
@@ -132,46 +134,13 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     if (RunSaveManager.IsRunActive())
                     {
                         RunSaveManager.FinishRun();
-                        Logger.LogWarning("Ended an active run found stored in the RunSaveManager...");
+                        Logger.LogWarning("Ended an active run found stored in the RunSaveManager!");
                     }
 
                     // Initialize the UI animation helper object.
                     animManagerGameObject = new GameObject("SplitsStatsPlugin AnimationManager");
                     animManager = animManagerGameObject.AddComponent<AnimationManager>();
-                    Logger.LogInfo("Created AnimationManager...");
-
-                    // Initialize current run settings.
-                    RunSaveManager.StartNewRun();
-                    RunSaveManager.currentRun.playerCount = PhotonNetwork.PlayerList.Length;
-                    RunSaveManager.currentRun.levelName = SceneManager.GetActiveScene().name;
-                    RunSaveManager.currentRun.gameVersion = "v" + Application.version;
-                    RunSaveManager.currentRun.ascentDifficulty = Ascents.currentAscent;
-                    RunSaveManager.currentRun.isRealTime = SettingsManager.isRealTime;
-
-                    if (RunSettings.IsCustomRun)
-                    {
-                        RunSaveManager.currentRun.customRun = true;
-
-                        // Calculate FNV-1a hash code for the run settings, which is persistent between application launches.
-                        uint settingsHash = 0x811c9dc5;
-                        foreach (RunSettings.SETTINGTYPE currSetting in Enum.GetValues(typeof(RunSettings.SETTINGTYPE)))
-                            settingsHash ^= (uint)RunSettings.GetValue(currSetting);
-                            settingsHash *= 0x01000193;
-
-                        RunSaveManager.currentRun.customRunSettingsHash = settingsHash;
-                    }
-                    else RunSaveManager.currentRun.customRun = false;
-
-                    if (hasTerrainRandomiser)
-                    {
-                        RunSaveManager.currentRun.wasRandomized = TerrainRandomiserInteractor.shouldRandomise();
-                        RunSaveManager.currentRun.seed = TerrainRandomiserInteractor.masterSeed();
-                    }
-                    Logger.LogInfo("Loaded run information...");
-
-                    // Load run records.
-                    RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
-                    splitsManagerInstance.SetRunTargets();
+                    Logger.LogInfo("Created AnimationManager!");
 
                     Logger.LogInfo($"GUIManager.Start Postfix successfully completed!");
                 }
@@ -194,19 +163,95 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 {
                     Logger.LogInfo("Starting RunManager.StartRun Postfix!");
 
+                    // Start new run.
+                    if (Quicksave.ShouldUseSaveData) RunSaveManager.ResumeQuicksave(); 
+                    else RunSaveManager.StartNewRun();
+
+                    // Load run records.
+                    RunSaveManager.GetRunRecords(CategorizeByCurrRunConfig);
+                    splitsManagerInstance.SetRunTargets();
+
                     // Start our timers at the exact same time as used by the in-game timer.
                     float startTime = SettingsManager.isRealTime ? GetCurrentRealTime() : Time.time;
                     startTime += SettingsManager.useInGameTiming ? -RunManager.Instance.TimeSinceRunStarted : Character.localCharacter.data.fallSeconds;
+
+                    Segment startingSegment = MapHandler.CurrentSegmentNumber;
+
+                    // Start segment timer that we're beginning at.
+                    splitsManagerInstance.SetTimerHidden(startingSegment, false);
+                    splitsManagerInstance.SetTimerFontSize(startingSegment, SplitsManager.ACTIVE_FONT_SIZE);
+                    splitsManagerInstance.UpdateTimerPositions();
+                    if (splitsManagerInstance.StartTimerAtTime(startingSegment, startTime))
+                        Logger.LogInfo($"Started {startingSegment} timer!");
+
+                    // Load quicksave data (which is not used when starting the starting segment timer).
+                    if (Quicksave.ShouldUseSaveData)
+                    {
+                        Logger.LogInfo("Resuming quicksave, attempting to load previous saved run into timers...");
+
+                        float previousTimeTotal = 0.0f;
+
+                        // Loop through all segments before the one we're starting from.
+                        for (Segment previousSegment = Segment.Beach; previousSegment < startingSegment; previousSegment++)
+                        {
+                            float previousSegmentTime = RunSaveManager.currentRun[previousSegment];
+                            if (previousSegmentTime > 0.0f)
+                            {
+                                // Add segment time to add to the master timer.
+                                previousTimeTotal += previousSegmentTime;
+
+                                // Attempt to change the shared icons of previous segments that have been completed.
+                                if (SettingsManager.sharedBiomeIcons && previousSegment != Segment.Void)
+                                {
+                                    splitsManagerInstance.UpdateTimerIcon(previousSegment, false);
+                                    if (previousSegment == Segment.Caldera) splitsManagerInstance.UpdateTimerIcon(Segment.TheKiln, false);
+                                }
+                            }
+                            else
+                            {
+                                // Log error and break.
+                                Logger.LogError("Valid previous run not found! Using fresh times instead!");
+                                if (previousSegment > Segment.Beach) Logger.LogInfo("For some reason the current run had at least one previous segment time valid for the quicksave, please debug RunTime.ResumeLastRun() this shouldn't be possible!");
+                                previousTimeTotal = -1.0f;
+                                break;
+                            }
+                        }
+                        // If the segment we're starting from already has a time, an error occured and cancel loading.
+                        if (RunSaveManager.currentRun[startingSegment] >= 0.0f)
+                        {
+                            Logger.LogError("For some reason the current run had all previous segments valid for the quicksave except the current starting segment, please debug RunTime.ResumeLastRun() this shouldn't be possible!");
+                            previousTimeTotal = -1.0f; 
+                        }
+
+                        if (previousTimeTotal > 0.0f)
+                        {
+                            startTime -= previousTimeTotal;
+                            TimerComponent.runStartTime = startTime;
+
+                            float tempRunTime = startTime;
+                            for (Segment previousSegment = Segment.Beach; previousSegment < startingSegment; previousSegment++)
+                            {
+                                float previousSegmentTime = RunSaveManager.currentRun[previousSegment];
+
+                                // Attempt to load segment time into segment timer.
+                                if (!splitsManagerInstance.StartTimerAtTime(previousSegment, tempRunTime)
+                                    || !splitsManagerInstance.EndTimerAtTime(previousSegment, tempRunTime + previousSegmentTime))
+                                {
+                                    // If unable to load time into segment timer, send a warning.
+                                    Logger.LogWarning($"{previousSegment} segment time found, but unable to load into segment timer!");
+                                }
+                                tempRunTime += previousSegmentTime;
+                            }
+
+                            Logger.LogInfo("Successfully loaded previous saved run!");
+                        }
+                    }
+
                     splitsManagerInstance.mainTimer.SetPaceTextActive(SettingsManager.showRunPace && SettingsManager.paceTextEnabled);
                     splitsManagerInstance.mainTimer.StartRunAtTime(startTime);
                     splitsManagerInstance.mainTimer.SetHeight(SplitsManager.HEADER_FONT_SIZE);
-                    splitsManagerInstance.SetTimerHidden(Segment.Beach, false);
-                    splitsManagerInstance.SetTimerFontSize(Segment.Beach, SplitsManager.ACTIVE_FONT_SIZE);
-                    splitsManagerInstance.UpdateTimerPositions();
-                    if (splitsManagerInstance.StartTimerAtTime(Segment.Beach, startTime))
-                        Logger.LogInfo($"Started shore timer!");
 
-                    if (RunSaveManager.currentRun.ascentDifficulty >= 8 && ! SettingsManager.hiddenSegments)
+                    if (RunSaveManager.currentRun.ascentDifficulty >= 8 && !SettingsManager.hiddenSegments)
                     {
                         Logger.LogInfo("Ascent is 8 or higher, displaying Nadir timer...");
                         if (!splitsManagerInstance.SetTimerHidden(Segment.Void, false)) Logger.LogError("Could not display nadir timer!");
@@ -299,8 +344,11 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         {
             splitsManagerInstance.EndTimer(s - 1);
             animManager.LerpTimerFontSize(splitsManagerInstance.splitTimers[s - 1], SplitsManager.INACTIVE_FONT_SIZE, FONT_CHANGE_DURATION);
-            RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
-            RunSaveManager.SaveRun();
+            if (RunSaveManager.IsRunActive())
+            {
+                RunSaveManager.currentRun[s - 1] = splitsManagerInstance.splitTimers[s - 1].totalTime;
+                RunSaveManager.SaveRun();
+            }
             Logger.LogInfo($"Stopped {s - 1} timer!");
         }
 
@@ -308,7 +356,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         if (s == Segment.TheKiln)
         {
             // If in a minirun save the first half time.
-            if (RunSettings.isMiniRun)
+            if (RunSettings.isMiniRun && RunSaveManager.IsRunActive())
             {
                 RunSaveManager.currentRun[Segment.Caldera] = splitsManagerInstance.mainTimer.currTime;
                 RunSaveManager.SaveRun();
@@ -324,7 +372,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
         else if (s == Segment.Void)
         {
             // If in a minirun save the final half of biome 4. This technically can't happen without cheating in scout's honor but might as well cover it.
-            if (RunSettings.isMiniRun)
+            if (RunSettings.isMiniRun && RunSaveManager.IsRunActive())
             {
                 RunSaveManager.currentRun[Segment.TheKiln] = splitsManagerInstance.mainTimer.currTime - RunSaveManager.currentRun[Segment.Caldera];
                 RunSaveManager.SaveRun();
@@ -489,13 +537,16 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                     Logger.LogInfo($"Writing final time of completed run...");
 
                     float finalRunTime = SettingsManager.isRealTime || !SettingsManager.useInGameTiming ? splitsManagerInstance.mainTimer.totalTime : totalSeconds;
+                    RunSaveManager.currentRun.finalTime = finalRunTime;
+
+                    // Save individual segment times for miniruns.
                     if (RunSettings.isMiniRun)
                     {
                         if (MapHandler.CurrentSegmentNumber >= Segment.Void) RunSaveManager.currentRun[Segment.Void] = finalRunTime - RunSaveManager.currentRun[Segment.TheKiln] - RunSaveManager.currentRun[Segment.Caldera];
                         else if (MapHandler.CurrentSegmentNumber >= Segment.TheKiln) RunSaveManager.currentRun[Segment.TheKiln] = finalRunTime - RunSaveManager.currentRun[Segment.Caldera];
                         else RunSaveManager.currentRun[(Segment)RunSettings.GetValue(RunSettings.SETTINGTYPE.MiniRunBiome)] = finalRunTime;
+                        Logger.LogInfo($"Writing segment time(s) of minirun after ending in segment {MapHandler.CurrentSegmentNumber}...");
                     }
-                    RunSaveManager.currentRun.finalTime = finalRunTime;
 
                     RunSaveManager.currentRun.runFinished = hasWon;
                 }

@@ -51,6 +51,9 @@ public class SettingsManager
     public static ConfigEntry<bool> disablePaceCustomRunsConfig;
     public static bool disablePaceCustomRuns { get { return disablePaceCustomRunsConfig?.Value ?? true; } private set { if (disablePaceCustomRunsConfig != null) disablePaceCustomRunsConfig.Value = value; } }
 
+    public static ConfigEntry<bool> customRunNormalPaceConfig;
+    public static bool customRunNormalPace { get { return customRunNormalPaceConfig?.Value ?? false; } private set { if (customRunNormalPaceConfig != null) customRunNormalPaceConfig.Value = value; } }
+
     public static ConfigEntry<bool> useAverageRunConfig;
     public static bool useAverageRun { get { return useAverageRunConfig?.Value ?? false; } private set { if (useAverageRunConfig != null) useAverageRunConfig.Value = value; } }
 
@@ -175,6 +178,7 @@ public class SettingsManager
 
         enablePaceConfig = config.Bind("2. Run Pace/Intervals", "Enable Pace/Intervals", enablePace, "Display how far ahead or behind you are from your best record next to each timer. The runs used for pacing are based on the categorization settings.");
         disablePaceCustomRunsConfig = config.Bind("2. Run Pace/Intervals", "Disable Pace/Intervals for Custom Runs", disablePaceCustomRuns, "Set to true to hide the pace/interval during custom runs and miniruns.");
+        customRunNormalPaceConfig = config.Bind("2. Run Pace/Intervals", "Custom Run Paces Use Normal Run Times", customRunNormalPace, "Set to true to have pace/interval timers during custom runs display times earned from normal runs.");
         useAverageRunConfig = config.Bind("2. Run Pace/Intervals", "Display Average Pace", useAverageRun, "Set to true to display your average times instead of the record time. Gold splits now display personal bests.");
         showPaceOnStartConfig = config.Bind("2. Run Pace/Intervals", "Show On Timer/Segment Start", showPaceOnStart, "Show the current run pace/interval as soon as the timer starts.");
         showPaceOnEndConfig = config.Bind("2. Run Pace/Intervals", "Show On Segment Ends", showPaceOnEnd, "Show the pace/intervals when each segment time is ended.");

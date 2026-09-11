@@ -350,7 +350,7 @@ public class TimerComponent : InfoComponent
             // Calculate the pace time to display.
             float currRunTime = time + (startTime - runStartTime);
             float currRunPace = currRunTime - targetRunTime;
-            if (SettingsManager.useAverageRun) currRunPace = time - recordTime;
+            if (SettingsManager.useAverageRun) currRunPace = time - targetRunTime;
 
             tmpTextPace.text = GetTimeString(currRunPace, false, false, precisionDigits > 0 ? 1 : 0, true);
 
@@ -366,11 +366,6 @@ public class TimerComponent : InfoComponent
 
             // Set the color of the pace text.
             if (!SettingsManager.useColorPace) tmpTextPace.color = tmpText.color;
-            else if (SettingsManager.useAverageRun)
-            {
-                if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = greenSplitColor;
-                else tmpTextPace.color = redSplitColor;
-            }
             else
             {
                 if (recordTime > 0.0f && time < recordTime) tmpTextPace.color = goldSplitColor;
@@ -469,10 +464,10 @@ public class TimerComponent : InfoComponent
     public bool EndTimerAtTime(float endingTime)
     {
         if (!timerOn) return false;
-        endTime = endingTime;
-        UpdateText(currTime);
-        if (SettingsManager.showPaceOnEnd && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
         timerOn = false;
+        endTime = endingTime;
+        UpdateText(endingTime - startTime);
+        if (SettingsManager.showPaceOnEnd && SettingsManager.paceTextEnabled) SetPaceTextActive(true);
         SetCurrColor(inactiveColor);
         if (tmpTextPace != null) tmpTextPace.color = tmpTextPace.color * SplitsManager.INACTIVE_COLOR_SCALE;
         return true;

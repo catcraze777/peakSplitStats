@@ -1,11 +1,13 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Collections;
+using Peak;
 using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Photon.Pun;
 
 namespace SplitsStats;
 
@@ -18,6 +20,13 @@ public class RunSaveManager
     public static float targetCaldera { get { if (SettingsManager.useAverageRun) return averageCaldera; else return fastestCaldera; } }
     public static float targetKiln { get { if (SettingsManager.useAverageRun) return averageKiln; else return fastestKiln; } }
     public static float targetNadir { get { if (SettingsManager.useAverageRun) return averageNadir; else return fastestNadir; } }
+    public static float targetBiome4 { get { if (SettingsManager.useAverageRun) return averageBiome4; else return fastestBiome4; } }
+    public static float targetSegment(Segment indexSegment)
+    {
+        if (SettingsManager.useAverageRun) return averageSegment(indexSegment);
+        else return fastestSegment(indexSegment);
+    } 
+
 
     public static RunTime fastestRun { get; private set; }
     public static float fastestShore { get; private set; }
@@ -26,6 +35,27 @@ public class RunSaveManager
     public static float fastestCaldera { get; private set; }
     public static float fastestKiln { get; private set; }
     public static float fastestNadir { get; private set; }
+    public static float fastestBiome4 { get; private set; }
+    public static float fastestSegment(Segment indexSegment)
+    {
+        switch(indexSegment)
+        {
+            case Segment.Beach:
+                return fastestShore;
+            case Segment.Tropics:
+                return fastestTropics;
+            case Segment.Alpine:
+                return fastestAlpmesa;
+            case Segment.Caldera:
+                return fastestCaldera;
+            case Segment.TheKiln:
+                return fastestKiln;
+            case Segment.Void:
+                return fastestNadir;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    } 
 
     public static RunTime averageRun { get; private set; }
     public static float averageShore { get; private set; }
@@ -34,6 +64,27 @@ public class RunSaveManager
     public static float averageCaldera { get; private set; }
     public static float averageKiln { get; private set; }
     public static float averageNadir { get; private set; }
+    public static float averageBiome4 { get; private set; }
+    public static float averageSegment(Segment indexSegment)
+    {
+        switch(indexSegment)
+        {
+            case Segment.Beach:
+                return averageShore;
+            case Segment.Tropics:
+                return averageTropics;
+            case Segment.Alpine:
+                return averageAlpmesa;
+            case Segment.Caldera:
+                return averageCaldera;
+            case Segment.TheKiln:
+                return averageKiln;
+            case Segment.Void:
+                return averageNadir;
+            default:
+                throw new IndexOutOfRangeException();
+        }
+    } 
 
     public static int totalAttempts { get; private set; }
     public static float SumOfBest
@@ -98,9 +149,105 @@ public class RunSaveManager
             if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to start a run when one is already started!");
             return null;
         }
+        SplitsStatsPlugin.Logger.LogInfo($"Starting new run...");
         currentRun = new RunTime();
         currentRun.UpdateTimeString();
         runStorage.Add(new RunTime(currentRun));
+
+        // Initialize current run settings.
+        currentRun.playerCount = PhotonNetwork.PlayerList.Length;
+        currentRun.levelName = SceneManager.GetActiveScene().name;
+        currentRun.gameVersion = "v" + Application.version;
+        currentRun.ascentDifficulty = Ascents.currentAscent;
+        currentRun.isRealTime = SettingsManager.isRealTime;
+
+        if (RunSettings.IsCustomRun)
+        {
+            currentRun.customRun = true;
+
+            // Calculate FNV-1a hash code for the run settings, which is persistent between application launches.
+            uint settingsHash = 0x811c9dc5;
+            foreach (RunSettings.SETTINGTYPE currSetting in Enum.GetValues(typeof(RunSettings.SETTINGTYPE)))
+            {
+                settingsHash ^= (uint)RunSettings.GetValue(currSetting);
+                settingsHash *= 0x01000193;
+            }
+
+            currentRun.customRunSettingsHash = settingsHash;
+        }
+        else currentRun.customRun = false;
+
+        if (SplitsStatsPlugin.hasTerrainRandomiser)
+        {
+            currentRun.wasRandomized = TerrainRandomiserInteractor.shouldRandomise();
+            currentRun.seed = TerrainRandomiserInteractor.masterSeed();
+        }
+
+        SplitsStatsPlugin.Logger.LogInfo("Loaded run information!");
+        return currentRun;
+    }
+
+    /// <summary> Resumes a quicksave and loads the last saved run to this.currentRun after validating it. Edit this.currentRun and that data will be saved. 
+    /// If no runs have been loaded, the last run doesn't fit the quicksave, or we aren't loading from a quicksave this will return null.
+    /// IF A RUN IS ACTIVE THIS WILL OVERWRITE IT'S DATA IF SUCCESSFUL.</summary>
+    /// <returns> A copy of the reference of the object stored in this.currentRun or null if unsuccessful.</returns>
+    public static RunTime ResumeQuicksave()
+    {
+        if (!Quicksave.ShouldUseSaveData)
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to resume a run when we aren't resuming from a save!");
+            return null;
+        }
+
+        if (!IsRunActive()) StartNewRun();
+
+        if (runStorage.Count <= 1)
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to resume a run when there is no run to load!");
+            return null;
+        }
+
+        SplitsStatsPlugin.Logger.LogInfo($"Attempting to resume last run...");
+
+        RunTime lastRun = new RunTime(runStorage[^2]);
+
+        // Verify that the previous saved run settings matches the loaded quicksave's run settings.
+        bool settingsIdentical = true;
+        if (currentRun.runFinished != lastRun.runFinished) settingsIdentical = false;
+        if (currentRun.gameVersion != lastRun.gameVersion) settingsIdentical = false;
+        if (currentRun.levelName != lastRun.levelName) settingsIdentical = false;
+        if (currentRun.ascentDifficulty != lastRun.ascentDifficulty) settingsIdentical = false;
+        if (currentRun.customRun != lastRun.customRun) settingsIdentical = false;
+        if (currentRun.customRun && lastRun.customRun && currentRun.customRunSettingsHash != lastRun.customRunSettingsHash) settingsIdentical = false;
+        if (currentRun.wasRandomized != lastRun.wasRandomized) settingsIdentical = false;
+        if (currentRun.wasRandomized && lastRun.wasRandomized && currentRun.seed != lastRun.seed) settingsIdentical = false;
+        if (SettingsManager.categorizeByPlayerCount && currentRun.playerCount != lastRun.playerCount) settingsIdentical = false; // Not sure how resuming multiplayer games works, but I assume you can resume with different players.
+        
+        if (!settingsIdentical)
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Previous run has different run settings, unable to resume run!");
+            return null;
+        }
+
+        // Make sure that the last run matches the segment we're resuming from.
+        for (Segment priorSegment = Segment.Beach; priorSegment < MapHandler.CurrentSegmentNumber; priorSegment++)
+        {
+            if (lastRun[priorSegment] <= 0.0f)
+            {
+                if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Previous run has a missing segment time, unable to resume run!");
+                return null;
+            }
+        }
+        if (lastRun[MapHandler.CurrentSegmentNumber] > 0.0f)
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Previous run has a time already saved for the current segment {MapHandler.CurrentSegmentNumber}, unable to resume run!");
+            return null;
+        }
+
+        SplitsStatsPlugin.Logger.LogInfo($"Last run successfully resumed!");
+        currentRun = lastRun;
+        runStorage.RemoveAt(runStorage.Count - 1); // Removes the old fresh run that is overwritten by the previous save.
+        SaveRun();
         return currentRun;
     }
 
@@ -200,6 +347,7 @@ public class RunSaveManager
         fastestCaldera = -1.0f;
         fastestKiln = -1.0f;
         fastestNadir = -1.0f;
+        fastestBiome4 = -1.0f;
 
         averageRun = new RunTime();
         averageShore = -1.0f;
@@ -208,6 +356,7 @@ public class RunSaveManager
         averageCaldera = -1.0f;
         averageKiln = -1.0f;
         averageNadir = -1.0f;
+        averageBiome4 = -1.0f;
 
         totalAttempts = 0;
     }
@@ -240,6 +389,8 @@ public class RunSaveManager
         int numKiln = 0;
         averageNadir = 0.0f;
         int numNadir = 0;
+        averageBiome4 = 0.0f;
+        int numBiome4 = 0;
         averageRun.finalTime = 0.0f;
         totalAttempts = 0;
 
@@ -253,6 +404,8 @@ public class RunSaveManager
             {
                 if (!CategorizationFunc(run)) continue;
             }
+
+            if (IsRunActive() && run == runStorage[^1]) continue;
 
             totalAttempts++;
 
@@ -309,14 +462,24 @@ public class RunSaveManager
                 averageKiln += run.kilnTime;
                 numKiln++;
             }
-            
+
             if (run.nadirTime > 0.0f)
             {
                 if (fastestNadir == -1.0f || run.nadirTime < fastestNadir)
                     fastestNadir = run.nadirTime;
-                
+
                 averageNadir += run.nadirTime;
                 numNadir++;
+            }
+            
+            if (run.calderaTime > 0.0f && run.kilnTime > 0.0f)
+            {
+                float biome4Time = run.calderaTime + run.kilnTime;
+                if (fastestBiome4 == -1.0f || biome4Time < fastestBiome4)
+                    fastestBiome4 = biome4Time;
+
+                averageBiome4 += biome4Time;
+                numBiome4++;
             }
         }
 
@@ -337,6 +500,9 @@ public class RunSaveManager
 
         if (numNadir > 0) averageNadir /= numNadir;
         else averageNadir = -1.0f;
+
+        if (numBiome4 > 0) averageBiome4 /= numBiome4;
+        else averageBiome4 = -1.0f;
 
         if (numCompleteRuns > 0) { averageRun.finalTime /= numCompleteRuns; averageRun.runFinished = true; }
         else { averageRun.finalTime = -1.0f; averageRun.runFinished = false; }
