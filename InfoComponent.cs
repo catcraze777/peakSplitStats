@@ -264,6 +264,18 @@ public class InfoComponent : BaseUIComponent
     /// </summary>
     public virtual void Update()
     {
-        if (tmpText != null) tmpText.text = TextToDisplay() ?? tmpText.text;
+        if (tmpText != null)
+        {
+            string nextText = TextToDisplay();
+            if (nextText != null)
+            {
+                tmpText.text = nextText;
+                if (IsHidden) IsHidden = false;
+            }
+            else
+            {
+                if (!IsHidden) IsHidden = true;
+            }
+        }
     }
 }

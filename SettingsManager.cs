@@ -35,10 +35,25 @@ public class SettingsManager
     public static float uiScaleSize { get { return uiScaleSizeConfig?.Value ?? 1.0f; } private set { if (uiScaleSizeConfig != null) uiScaleSizeConfig.Value = value; } }
 
     public static ConfigEntry<bool> showCurrentAttemptNumberConfig;
-    public static bool showCurrentAttemptNumber { get { return showCurrentAttemptNumberConfig?.Value ?? true; } private set { if (showCurrentAttemptNumberConfig != null) showCurrentAttemptNumberConfig.Value = value; } }
+    public static bool showCurrentAttemptNumber { get { return showCurrentAttemptNumberConfig?.Value ?? false; } private set { if (showCurrentAttemptNumberConfig != null) showCurrentAttemptNumberConfig.Value = value; } }
 
     public static ConfigEntry<bool> showCurrentHeightConfig;
     public static bool showCurrentHeight { get { return showCurrentHeightConfig?.Value ?? true; } private set { if (showCurrentHeightConfig != null) showCurrentHeightConfig.Value = value; } }
+
+    public static ConfigEntry<bool> showCurrentRecordConfig;
+    public static bool showCurrentRecord { get { return showCurrentRecordConfig?.Value ?? false; } private set { if (showCurrentRecordConfig != null) showCurrentRecordConfig.Value = value; } }
+
+    public static ConfigEntry<bool> showCurrentSumOfBestConfig;
+    public static bool showCurrentSumOfBest { get { return showCurrentSumOfBestConfig?.Value ?? false; } private set { if (showCurrentSumOfBestConfig != null) showCurrentSumOfBestConfig.Value = value; } }
+
+    public static ConfigEntry<bool> showCurrentSegmentRecordConfig;
+    public static bool showCurrentSegmentRecord { get { return showCurrentSegmentRecordConfig?.Value ?? false; } private set { if (showCurrentSegmentRecordConfig != null) showCurrentSegmentRecordConfig.Value = value; } }
+
+    public static ConfigEntry<bool> showCurrentAverageConfig;
+    public static bool showCurrentAverage { get { return showCurrentAverageConfig?.Value ?? false; } private set { if (showCurrentAverageConfig != null) showCurrentAverageConfig.Value = value; } }
+
+    public static ConfigEntry<bool> showCurrentSegmentAverageConfig;
+    public static bool showCurrentSegmentAverage { get { return showCurrentSegmentAverageConfig?.Value ?? false; } private set { if (showCurrentSegmentAverageConfig != null) showCurrentSegmentAverageConfig.Value = value; } }
 
     public static ConfigEntry<bool> showDistanceFromFireConfig;
     public static bool showDistanceFromFire { get { return showDistanceFromFireConfig?.Value ?? true; } private set { if (showDistanceFromFireConfig != null) showDistanceFromFireConfig.Value = value; } }
@@ -172,7 +187,12 @@ public class SettingsManager
         hiddenSegmentsConfig = config.Bind("1. General", "Hidden Segments", hiddenSegments, "If true, segment timers are hidden from displaying until their corresponding timer begins as the run progresses.");
         isRealTimeConfig = config.Bind("1. General", "Use Real Time", isRealTime, "Use real system time instead of in-game time. Doing so will allow the timer to keep running if the game is paused when playing solo.");
         uiScaleSizeConfig = config.Bind("1. General", "UI Scale Multiplier", uiScaleSize, "Scale the size of the mod's UI. Default is 1.0 (100% the original size)");
-        showCurrentAttemptNumberConfig = config.Bind("1. General", "Show Current Attempt Number", showCurrentAttemptNumber, "Show the player's current run attempt number. This number is based on the number of saved runs that fit the categorization settings. Will never show if the run cannot be saved due to a custom or loaded run.");
+        showCurrentAttemptNumberConfig = config.Bind("1. General", "Show Current Attempt Number", showCurrentAttemptNumber, "Show the player's current run attempt number. This number is based on the number of saved runs that fit the categorization settings.");
+        showCurrentRecordConfig = config.Bind("1. General", "Show Record Time", showCurrentRecord, "Show the player's current record time based on the categorization settings.");
+        showCurrentSumOfBestConfig = config.Bind("1. General", "Show Sum of Best Time", showCurrentSumOfBest, "Show the player's current sum of best time based on the categorization settings.");
+        showCurrentSegmentRecordConfig = config.Bind("1. General", "Show Segment Record Time", showCurrentSegmentRecord, "Show the player's current segment record time based on the categorization settings.");
+        showCurrentSegmentAverageConfig = config.Bind("1. General", "Show Average Time", showCurrentSegmentAverage, "Show the player's current average time based on the categorization settings.");
+        showCurrentAverageConfig = config.Bind("1. General", "Show Segment Average Time", showCurrentAverage, "Show the player's current segment average time based on the categorization settings.");
         showCurrentHeightConfig = config.Bind("1. General", "Show Current Height", showCurrentHeight, "Show the player's current height/altitude.");
         showDistanceFromFireConfig = config.Bind("1. General", "Show Distance From Campfire", showDistanceFromFire, "Show the player's current distance from the next campfire or the Peak if in The Kiln.");
 

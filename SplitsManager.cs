@@ -120,6 +120,12 @@ public class SplitsManager : MonoBehaviour
     public const string peakImgPath = "img_peak.png";
     public const string peakGateImgPath = "img_peak_gate.png";
 
+    public const string recordIconImgPath = "img_record.png";
+    public const string recordSegmentIconImgPath = "img_record_segment.png";
+    public const string recordSumIconImgPath = "img_record_sum.png";
+    public const string averageIconImgPath = "img_average.png";
+    public const string averageSegmentIconImgPath = "img_average_segment.png";
+
     public const string ATTEMPT_STAT_NAME = "Attempt Stat";
     public const string HEIGHT_STAT_NAME = "Height Stat";
     public const string CAMPFIRE_STAT_NAME = "Campfire Stat";
@@ -406,6 +412,33 @@ public class SplitsManager : MonoBehaviour
         {
             InfoComponentTemplate attemptNumberTemplate = new(ATTEMPT_STAT_NAME, () => $"Attempt {RunSaveManager.totalAttempts + 1}");
             CreateInfoComponent(attemptNumberTemplate);
+        }
+
+        // Create stats for run records/averages.
+        if (SettingsManager.showCurrentSumOfBest)
+        {
+            InfoComponentTemplate recordTemplate = new("Sum of best Stat", GetRecordSumString, SplitsStatsPlugin.LoadSprite(recordSumIconImgPath), color: new Color(1.0f, 0.88f, 0.32f));
+            CreateInfoComponent(recordTemplate);
+        }
+        if (SettingsManager.showCurrentRecord)
+        {
+            InfoComponentTemplate recordTemplate = new("Record Stat", GetRecordString, SplitsStatsPlugin.LoadSprite(recordIconImgPath), color: new Color(1.0f, 0.94f, 0.67f));
+            CreateInfoComponent(recordTemplate);
+        }
+        if (SettingsManager.showCurrentSegmentRecord)
+        {
+            InfoComponentTemplate recordTemplate = new("Segment Record Stat", GetRecordSegmentString, SplitsStatsPlugin.LoadSprite(recordSegmentIconImgPath), color: new Color(1.0f, 0.97f, 0.85f));
+            CreateInfoComponent(recordTemplate);
+        }
+        if (SettingsManager.showCurrentAverage)
+        {
+            InfoComponentTemplate recordTemplate = new("Average Stat", GetAverageString, SplitsStatsPlugin.LoadSprite(averageIconImgPath), color: new Color(0.50f, 1.0f, 0.38f));
+            CreateInfoComponent(recordTemplate);
+        }
+        if (SettingsManager.showCurrentSegmentAverage)
+        {
+            InfoComponentTemplate recordTemplate = new("Segment Average Stat", GetAverageSegmentString, SplitsStatsPlugin.LoadSprite(averageSegmentIconImgPath), color: new Color(0.77f, 1.0f, 0.715f));
+            CreateInfoComponent(recordTemplate);
         }
 
         // Create the height status.
@@ -754,6 +787,60 @@ public class SplitsManager : MonoBehaviour
         campfireComponent.iconRectTransform.GetComponent<UnityEngine.UI.Image>().sprite = newIcon;
     }
 
+    public string GetRecordString()
+    {
+        float runRecord = RunSaveManager.fastestRun.finalTime;
+        if (RunSettings.isMiniRun)
+        {
+            Segment minirunBiome = (Segment)RunSettings.GetValue(RunSettings.SETTINGTYPE.MiniRunBiome);
+            if (minirunBiome == Segment.Caldera) runRecord = RunSaveManager.fastestBiome4;
+            else runRecord = RunSaveManager.fastestSegment(minirunBiome);
+        }
+
+        if (runRecord > 0.0f) return TimerComponent.GetTimeString(runRecord);
+        else return null;
+    }
+
+    public string GetRecordSegmentString()
+    {
+        Segment currSegment = MapHandler.CurrentSegmentNumber;
+        float runRecord = RunSaveManager.fastestSegment(currSegment);
+
+        if (runRecord > 0.0f && !RunSettings.isMiniRun) return TimerComponent.GetTimeString(runRecord);
+        else return null;
+    }
+
+    public string GetRecordSumString()
+    {
+        float runRecord = RunSaveManager.SumOfBest;
+
+        if (runRecord > 0.0f && !RunSettings.isMiniRun) return TimerComponent.GetTimeString(runRecord);
+        else return null;
+    }
+
+    public string GetAverageString()
+    {
+        float runRecord = RunSaveManager.averageRun.finalTime;
+        if (RunSettings.isMiniRun)
+        {
+            Segment minirunBiome = (Segment)RunSettings.GetValue(RunSettings.SETTINGTYPE.MiniRunBiome);
+            if (minirunBiome == Segment.Caldera) runRecord = RunSaveManager.averageBiome4;
+            else runRecord = RunSaveManager.averageSegment(minirunBiome);
+        }
+
+        if (runRecord > 0.0f) return TimerComponent.GetTimeString(runRecord);
+        else return null;
+    }
+
+    public string GetAverageSegmentString()
+    {
+        Segment currSegment = MapHandler.CurrentSegmentNumber;
+        float runRecord = RunSaveManager.averageSegment(currSegment);
+
+        if (runRecord > 0.0f && !RunSettings.isMiniRun) return TimerComponent.GetTimeString(runRecord);
+        else return null;
+    }
+    
     /// <summary>
     /// Start the timer of a specific segment at the current time.
     /// </summary>
