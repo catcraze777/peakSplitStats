@@ -195,6 +195,8 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                         for (Segment previousSegment = Segment.Beach; previousSegment < startingSegment; previousSegment++)
                         {
                             float previousSegmentTime = RunSaveManager.currentRun[previousSegment];
+
+                            // Verify that segment has a saved time.
                             if (previousSegmentTime > 0.0f)
                             {
                                 // Add segment time to add to the master timer.
@@ -209,7 +211,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                             }
                             else
                             {
-                                // Log error and break.
+                                // No saved time found for segment, log error and break.
                                 Logger.LogError("Valid previous run not found! Using fresh times instead!");
                                 if (previousSegment > Segment.Beach) Logger.LogInfo("For some reason the current run had at least one previous segment time valid for the quicksave, please debug RunTime.ResumeLastRun() this shouldn't be possible!");
                                 previousTimeTotal = -1.0f;
@@ -217,7 +219,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                             }
                         }
                         // If the segment we're starting from already has a time, an error occured and cancel loading.
-                        if (RunSaveManager.currentRun[startingSegment] >= 0.0f)
+                        if (previousTimeTotal > 0.0f && RunSaveManager.currentRun[startingSegment] > 0.0f)
                         {
                             Logger.LogError("For some reason the current run had all previous segments valid for the quicksave except the current starting segment, please debug RunTime.ResumeLastRun() this shouldn't be possible!");
                             previousTimeTotal = -1.0f; 
@@ -530,7 +532,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
                 Logger.LogInfo($"Starting EndScreen.GetTimeString postfix!");
 
                 bool hasWon = Character.localCharacter.refs.stats.won || Character.localCharacter.refs.stats.somebodyElseWon;
-                
+
                 // If the run was completed (regardless of death or win), save the final time as a completed run.
                 if (RunSaveManager.IsRunActive())
                 {
@@ -560,7 +562,7 @@ public class SplitsStatsPlugin : BaseUnityPlugin
 
                     // Update the original time text object.
                     __result += $"." + $"{Mathf.FloorToInt(SettingsManager.precisionInTimer * (totalSeconds % 1f))}".PadLeft((int)SettingsManager.precisionInTimer, '0');
-                    if (SettingsManager.isRealTime || ! SettingsManager.useInGameTiming) __result = TimerComponent.GetTimeString(splitsManagerInstance.mainTimer.totalTime, true, true, SettingsManager.precisionInTimer);
+                    if (SettingsManager.isRealTime || !SettingsManager.useInGameTiming) __result = TimerComponent.GetTimeString(splitsManagerInstance.mainTimer.totalTime, true, true, SettingsManager.precisionInTimer);
                     __instance.endTime.fontSizeMax = __instance.endTime.fontSize;
                     __instance.endTime.enableAutoSizing = true;
                     RectTransform textTransform = __instance.endTime.gameObject.GetComponent<RectTransform>();
@@ -604,6 +606,29 @@ public class SplitsStatsPlugin : BaseUnityPlugin
             catch (Exception ex)
             {
                 Logger.LogError((object)($"Error in EndScreen.GetTimeString patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
+            }
+        }
+    }
+    
+    [HarmonyPatch(typeof(Quicksave), "SaveNow")]
+    private class QuicksavePatcher
+    {
+        private static void Postfix()
+        {
+            try
+            {
+                if (RunSaveManager.IsRunActive())
+                {
+                    Logger.LogInfo($"Starting Quicksave.SaveNow postfix!");
+
+                    RunSaveManager.TryWriteQuickSave();
+
+                    Logger.LogInfo("Quicksave.SaveNow Postfix successfully completed!");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError((object)($"Error in Quicksave.SaveNow patch: {ex.GetType()}" + ex.Message + $"\n{ex.Source}\n{ex.TargetSite}\n{ex.StackTrace}"));
             }
         }
     }

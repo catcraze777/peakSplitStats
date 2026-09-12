@@ -188,8 +188,7 @@ public class RunSaveManager
     }
 
     /// <summary> Resumes a quicksave and loads the last saved run to this.currentRun after validating it. Edit this.currentRun and that data will be saved. 
-    /// If no runs have been loaded, the last run doesn't fit the quicksave, or we aren't loading from a quicksave this will return null.
-    /// IF A RUN IS ACTIVE THIS WILL OVERWRITE IT'S DATA IF SUCCESSFUL.</summary>
+    /// If no runs have been loaded, the loaded run doesn't fit the quicksave, we aren't loading from a quicksave, or a run has already started this will return null.</summary>
     /// <returns> A copy of the reference of the object stored in this.currentRun or null if unsuccessful.</returns>
     public static RunTime ResumeQuicksave()
     {
@@ -199,7 +198,12 @@ public class RunSaveManager
             return null;
         }
 
-        if (!IsRunActive()) StartNewRun();
+        if (IsRunActive())
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Tried to resume a run when one is already started!");
+            return null;
+        }
+        else StartNewRun();
 
         if (runStorage.Count <= 1)
         {
@@ -209,7 +213,17 @@ public class RunSaveManager
 
         SplitsStatsPlugin.Logger.LogInfo($"Attempting to resume last run...");
 
-        RunTime lastRun = new RunTime(runStorage[^2]);
+        // Load quicksaved run, if it exists.
+        RunTime lastRun;
+        try
+        {
+            lastRun = TryReadQuickSave();
+        }
+        catch (Exception ex)
+        {
+            if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Unable to read quicksave! An error occured: {ex.GetType()} {ex.Message}");
+            return null;
+        }
 
         // Verify that the previous saved run settings matches the loaded quicksave's run settings.
         bool settingsIdentical = true;
@@ -222,7 +236,7 @@ public class RunSaveManager
         if (currentRun.wasRandomized != lastRun.wasRandomized) settingsIdentical = false;
         if (currentRun.wasRandomized && lastRun.wasRandomized && currentRun.seed != lastRun.seed) settingsIdentical = false;
         if (SettingsManager.categorizeByPlayerCount && currentRun.playerCount != lastRun.playerCount) settingsIdentical = false; // Not sure how resuming multiplayer games works, but I assume you can resume with different players.
-        
+
         if (!settingsIdentical)
         {
             if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogError($"Previous run has different run settings, unable to resume run!");
@@ -244,9 +258,26 @@ public class RunSaveManager
             return null;
         }
 
+        // Quicksave validated, delete any previously saved run that matches the quicksave since we're resuming it.
+        for (int i = runStorage.Count - 1; i >= 0; i--)
+        {
+            if (runStorage[i].Equals(lastRun) && runStorage[i].runDate == lastRun.runDate)
+            {
+                if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Found quicksaved run in storage, deleting it!");
+                runStorage.RemoveAt(i);
+                break;
+            }
+            // If they aren't the same run, try to check their dates against each other.
+            else if (DateTime.TryParseExact(lastRun.runDate, "g", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime lastRunDate)
+                    && DateTime.TryParseExact(runStorage[i].runDate, "g", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime runStorageDate))
+            {
+                // Compare run dates to stop searching once we reach runs from before the quicksave, runStorage is sorted by date.
+                if (lastRunDate > runStorageDate) break;
+            }
+        }
+
         SplitsStatsPlugin.Logger.LogInfo($"Last run successfully resumed!");
         currentRun = lastRun;
-        runStorage.RemoveAt(runStorage.Count - 1); // Removes the old fresh run that is overwritten by the previous save.
         SaveRun();
         return currentRun;
     }
@@ -312,12 +343,15 @@ public class RunSaveManager
     // File reading and writing.
     private static string jsonDirectory;
     private static string jsonFilePath;
+    private static string quicksaveFilePath;
 
     private const string saveFileName = "savedRuns.json";
+    private const string quicksaveFileName = "quickSave.json";
     private static void GetFilePaths()
     {
         jsonDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         jsonFilePath = Path.Combine(jsonDirectory, saveFileName);
+        quicksaveFilePath = Path.Combine(jsonDirectory, quicksaveFileName);
     }
 
     public static void TryReadSave()
@@ -333,6 +367,27 @@ public class RunSaveManager
         string json = JsonConvert.SerializeObject(runStorage, Formatting.Indented);
         File.WriteAllText(jsonFilePath, json);
         if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Successfully wrote saved runs!");
+    }
+
+    public static RunTime TryReadQuickSave()
+    {
+        if (!File.Exists(quicksaveFilePath)) throw new FileNotFoundException($"Could not find file {quicksaveFileName} to load data from!");
+        string json = File.ReadAllText(quicksaveFilePath);
+        RunTime loadedRun = JsonConvert.DeserializeObject<RunTime>(json);
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Successfully read quicksave!");
+        return loadedRun;
+    }
+
+    public static void TryWriteQuickSave()
+    {
+        if (!IsRunActive())
+        {
+            throw new NullReferenceException("No run currently active to quicksave!");
+        }
+
+        string json = JsonConvert.SerializeObject(currentRun, Formatting.Indented);
+        File.WriteAllText(quicksaveFilePath, json);
+        if (SplitsStatsPlugin.Logger != null) SplitsStatsPlugin.Logger.LogInfo($"Successfully wrote quicksave!");
     }
 
     /// <summary>

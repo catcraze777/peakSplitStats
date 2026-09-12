@@ -250,7 +250,7 @@ public class SplitsManager : MonoBehaviour
             mainTimer.recordTime = SettingsManager.useAverageRun ? RunSaveManager.fastestRun.finalTime : RunSaveManager.SumOfBest;
         }
 
-        if (RunSaveManager.targetRun.shoreTime > 0.0f && splitTimers.ContainsKey(Segment.Beach)) splitTimers[Segment.Beach].targetRunTime = RunSaveManager.targetRun.shoreTime;
+        if (RunSaveManager.targetRun.shoreTime > 0.0f      && splitTimers.ContainsKey(Segment.Beach))         splitTimers[Segment.Beach].targetRunTime   = RunSaveManager.targetRun.shoreTime;
         if (RunSaveManager.targetRun.tropicsTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Tropics))      splitTimers[Segment.Tropics].targetRunTime = RunSaveManager.targetRun.tropicsTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Beach].targetRunTime);
         if (RunSaveManager.targetRun.alpmesaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Alpine))       splitTimers[Segment.Alpine].targetRunTime  = RunSaveManager.targetRun.alpmesaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Tropics].targetRunTime);
         if (RunSaveManager.targetRun.calderaTime > 0.0f    &&  splitTimers.ContainsKey(Segment.Caldera))      splitTimers[Segment.Caldera].targetRunTime = RunSaveManager.targetRun.calderaTime + (SettingsManager.useAverageRun ? 0.0f : splitTimers[Segment.Alpine].targetRunTime);
